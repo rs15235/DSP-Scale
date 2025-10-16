@@ -1,0 +1,791 @@
+---
+title: "Tables"
+author: "Rajneesh Sharma"
+date: "7/25/2023"
+output: html_document
+---
+
+```{r}
+
+library(tidyverse)
+
+AL_Covar_1 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/AL_1_SOC_pred.csv")
+AL_Covar_2 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/AL_2_SOC_pred.csv")
+GA_Covar_1 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/GA_1_SOC_pred.csv")
+GA_Covar_2 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/GA_2_SOC_pred.csv")
+MS_Covar_1 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MS_1_SOC_pred.csv")
+MS_Covar_2 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MS_2_SOC_pred.csv")
+FL_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/FL_SOC_pred.csv")
+LA_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/LA_SOC_pred.csv")
+NC_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/NC_SOC_pred.csv")
+SC_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/SC_SOC_pred.csv")
+TN_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/TN_SOC_pred.csv")
+VA_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/VA_SOC_pred.csv")
+
+```
+```{r}
+# library
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+
+AL_1_order_LC_SOC =AL_Covar_1%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+AL_2_order_LC_SOC =AL_Covar_2%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+GA_1_order_LC_SOC =GA_Covar_1%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+GA_2_order_LC_SOC =GA_Covar_2%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MS_1_order_LC_SOC =MS_Covar_1%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MS_2_order_LC_SOC =MS_Covar_2%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+FL_order_LC_SOC =FL_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+LA_order_LC_SOC =LA_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+NC_order_LC_SOC =NC_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+ 
+SC_order_LC_SOC =SC_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+TN_order_LC_SOC =TN_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+VA_order_LC_SOC =VA_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MLRA_order_LC_SOC_2001 <- rbind(VA_order_LC_SOC, TN_order_LC_SOC, NC_order_LC_SOC, SC_order_LC_SOC, LA_order_LC_SOC, FL_order_LC_SOC, MS_1_order_LC_SOC, MS_2_order_LC_SOC, GA_1_order_LC_SOC, GA_2_order_LC_SOC, AL_1_order_LC_SOC, AL_2_order_LC_SOC)
+
+MLRA_order_LC_SOC_2001 =MLRA_order_LC_SOC_2001%>%
+  group_by(Soil_Order, NLCD_2001)%>%
+  #filter(NLCD_2001 %in% c("21", "41", "42", "43", "52","81", "82", "90"))%>%
+  summarise(total_stock_2001=sum(total_stock_2001), SOC20_2001=mean(SOC20_2001), pixels_2001=sum(pixels_2001))
+
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '21'] <- 'Urban - Open Spaces'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '23'] <- 'Urban - Residential'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '31'] <- 'Barren Land'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '41'] <- 'Deciduous Forest'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '42'] <- 'Evergreen Forest'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '43'] <- 'Mixed Forest'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '52'] <- 'Shrub/Scrub'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '71'] <- 'Grassland/Herbaceous'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '81'] <- 'Pasture/Hay'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '82'] <- 'Cultivated Crops'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '90'] <- 'Woody Wetlands'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '95'] <- 'Emergent Herbaceous Wetlands'
+
+
+# Small multiple
+Plot_1 = ggplot(MLRA_order_LC_SOC_2001, aes(fill=NLCD_2001, y=total_stock_2001, x=Soil_Order)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(fill = NULL)+
+     scale_fill_manual(values=c("#B2ADA3", "#AA7028", "#68AA63", "#70A3BA", "#1C6330", "#E2E2C1", "#B5C98E", "#DBD83D", "#CCBA7C", "#DDC9C9", "#AA0000", "#BAD8EA")) +
+    theme_ipsum() +
+    xlab("")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.1, hjust=0.5))
+
+Plot_1
+
+Plot_2 = ggplot(MLRA_order_LC_SOC_2001, aes(fill=NLCD_2001, y=SOC20_2001, x=Soil_Order)) + 
+         geom_bar(position="stack", stat="identity") +
+        labs(fill = NULL)+
+         scale_fill_manual(values=c("#B2ADA3", "#AA7028", "#68AA63", "#70A3BA", "#1C6330", "#E2E2C1", "#B5C98E", "#DBD83D", "#CCBA7C", "#DDC9C9", "#AA0000", "#BAD8EA")) +
+         theme_ipsum() +
+         xlab("")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.1, hjust=0.5))
+Plot_2
+
+```
+Creating Plot 2
+```{r}
+# library
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+
+AL_1_order_LC_SOC =AL_Covar_1%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+AL_2_order_LC_SOC =AL_Covar_2%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+GA_1_order_LC_SOC =GA_Covar_1%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+GA_2_order_LC_SOC =GA_Covar_2%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+MS_1_order_LC_SOC =MS_Covar_1%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+MS_2_order_LC_SOC =MS_Covar_2%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+FL_order_LC_SOC =FL_Covar%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+LA_order_LC_SOC =LA_Covar%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+NC_order_LC_SOC =NC_Covar%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+ 
+SC_order_LC_SOC =SC_Covar%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+TN_order_LC_SOC =TN_Covar%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+VA_order_LC_SOC =VA_Covar%>%
+  select(Soil_Order, NLCD_2019, SOC_pred_2019)%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+MLRA_order_LC_SOC_2019 <- rbind(VA_order_LC_SOC, TN_order_LC_SOC, NC_order_LC_SOC, SC_order_LC_SOC, LA_order_LC_SOC, FL_order_LC_SOC, MS_1_order_LC_SOC, MS_2_order_LC_SOC, GA_1_order_LC_SOC, GA_2_order_LC_SOC, AL_1_order_LC_SOC, AL_2_order_LC_SOC)
+
+MLRA_order_LC_SOC_2019 =MLRA_order_LC_SOC_2019%>%
+  group_by(Soil_Order, NLCD_2019)%>%
+  #filter(NLCD_2019 %in% c("21", "41", "42", "43", "52","81", "82", "90"))%>%
+  summarise(total_stock_2019=sum(total_stock_2019), SOC20_2019=mean(SOC20_2019), pixels_2019=sum(pixels_2019))
+
+#MLRA_order_LC_SOC_2019$NLCD_2019=as.factor(MLRA_order_LC_SOC_2019$NLCD_2019)
+
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '21'] <- 'Urban - Open Spaces'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '23'] <- 'Urban - Residential'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '31'] <- 'Barren Land'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '41'] <- 'Deciduous Forest'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '42'] <- 'Evergreen Forest'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '43'] <- 'Mixed Forest'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '52'] <- 'Shrub/Scrub'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '71'] <- 'Grassland/Herbaceous'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '81'] <- 'Pasture/Hay'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '82'] <- 'Cultivated Crops'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '90'] <- 'Woody Wetlands'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '95'] <- 'Emergent Herbaceous Wetlands'
+
+# Small multiple
+Plot_3 = ggplot(MLRA_order_LC_SOC_2019, aes(fill=NLCD_2019, y=total_stock_2019, x=Soil_Order)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(fill = NULL)+
+     scale_fill_manual(values=c("#B2ADA3", "#AA7028", "#68AA63", "#70A3BA", "#1C6330", "#E2E2C1", "#B5C98E", "#DBD83D", "#CCBA7C", "#DDC9C9", "#AA0000", "#BAD8EA")) +
+    theme_ipsum() +
+    xlab("")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.1, hjust=0.5))
+
+Plot_3
+
+Plot_4 = ggplot(MLRA_order_LC_SOC_2019, aes(fill=NLCD_2019, y=SOC20_2019, x=Soil_Order)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(fill = NULL)+
+     scale_fill_manual(values=c("#B2ADA3", "#AA7028", "#68AA63", "#70A3BA", "#1C6330", "#E2E2C1", "#B5C98E", "#DBD83D", "#CCBA7C", "#DDC9C9", "#AA0000", "#BAD8EA")) +
+    theme_ipsum() +
+    xlab("")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.1, hjust=0.5))
+
+Plot_4
+# create a new plotting window and set the plotting area into a 1*2 array
+
+```
+
+Plot 5 and 6
+```{r}
+MLRA_order_LC_SOC_2001_2019=cbind(MLRA_order_LC_SOC_2001, MLRA_order_LC_SOC_2019)
+
+write.csv(MLRA_order_LC_SOC_2001,"E:/Manuscripts/DSP-Scale Model/MLRA_order_LC_SOC_2001.csv")
+write.csv(MLRA_order_LC_SOC_2019,"E:/Manuscripts/DSP-Scale Model/MLRA_order_LC_SOC_2019.csv")
+
+library(tidyverse)
+MLRA_order_LC_SOC_2001_2019=MLRA_order_LC_SOC_2001_2019%>%
+  mutate(total_stock_change = total_stock_2019 - total_stock_2001)%>%
+  mutate(SOC_20_change = SOC20_2019 - SOC20_2001)%>%
+  mutate(pixels_change = pixels_2019 - pixels_2001)
+
+
+Plot_5 = ggplot(MLRA_order_LC_SOC_2001_2019, aes(fill=NLCD_2019, y=total_stock_change, x=Soil_Order...1)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(fill = NULL)+
+     scale_fill_manual(values=c("#B2ADA3", "#AA7028", "#68AA63", "#70A3BA", "#1C6330", "#E2E2C1", "#B5C98E", "#DBD83D", "#CCBA7C", "#DDC9C9", "#AA0000", "#BAD8EA")) +
+    theme_ipsum() +
+    xlab("")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.1, hjust=0.5))
+
+Plot_5
+
+Plot_6 = ggplot(MLRA_order_LC_SOC_2001_2019, aes(fill=NLCD_2019, y=SOC_20_change, x=Soil_Order...1)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(fill = NULL)+
+     scale_fill_manual(values=c("#B2ADA3", "#AA7028", "#68AA63", "#70A3BA", "#1C6330", "#E2E2C1", "#B5C98E", "#DBD83D", "#CCBA7C", "#DDC9C9", "#AA0000", "#BAD8EA")) +
+    theme_ipsum() +
+    xlab("")+
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.1, hjust=0.5))
+
+Plot_6
+library(ggpubr)
+
+ggarrange(Plot_1, Plot_2, Plot_3, Plot_4, Plot_5, Plot_6, ncol= 2, nrow = 3, common.legend = TRUE, legend = c("right") )
+
+ggarrange(Plot_1, Plot_2, Plot_3, Plot_4, Plot_5, Plot_6, ncol= 3, nrow = 3, common.legend = TRUE)
+#Plot_4
+```
+Creating Boxplots
+```{r}
+
+AL_1_order_LC_SOC =AL_Covar_1%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+AL_2_order_LC_SOC =AL_Covar_2%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+GA_1_order_LC_SOC =GA_Covar_1%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+GA_2_order_LC_SOC =GA_Covar_2%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+MS_1_order_LC_SOC =MS_Covar_1%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+MS_2_order_LC_SOC =MS_Covar_2%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+FL_order_LC_SOC =FL_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+LA_order_LC_SOC =LA_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+NC_order_LC_SOC =NC_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+ 
+SC_order_LC_SOC =SC_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+TN_order_LC_SOC =TN_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+VA_order_LC_SOC =VA_Covar%>%
+  select(Soil_Order, NLCD_2001, SOC_pred_2001)
+
+MLRA_order_LC_SOC_2001 <- rbind(VA_order_LC_SOC, TN_order_LC_SOC, NC_order_LC_SOC, SC_order_LC_SOC, LA_order_LC_SOC, FL_order_LC_SOC, MS_1_order_LC_SOC, MS_2_order_LC_SOC, GA_1_order_LC_SOC, GA_2_order_LC_SOC, AL_1_order_LC_SOC, AL_2_order_LC_SOC)
+
+MLRA_order_LC_SOC_2001$NLCD_2001 = as.factor(MLRA_order_LC_SOC_2001$NLCD_2001)
+
+library(tidyverse)
+library(ggplot2)
+ 
+#boxplot_data_2019 = MLRA_order_LC_SOC_2019%>%
+ #filter(Soil_Order %in% c("Ultisols"))%>%
+  #mutate(Year = "2019")
+#%>%
+  #filter(NLCD_2019 %in% c ("Cultivated Crops"))
+ 
+# grouped boxplot
+ggplot(MLRA_order_LC_SOC_2001, aes(x=NLCD_2001, y=SOC_pred_2001, fill=Soil_Order)) + geom_boxplot()
+```
+Using Taxsubrder
+```{r}
+library(tidyverse)
+
+AL_1_sub_order_LC_SOC =AL_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+AL_2_sub_order_LC_SOC =AL_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+GA_1_sub_order_LC_SOC =GA_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+GA_2_sub_order_LC_SOC =GA_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MS_1_sub_order_LC_SOC =MS_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MS_2_sub_order_LC_SOC =MS_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+FL_sub_order_LC_SOC =FL_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+LA_sub_order_LC_SOC =LA_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+NC_sub_order_LC_SOC =NC_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+ 
+SC_sub_order_LC_SOC =SC_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+TN_sub_order_LC_SOC =TN_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+VA_sub_order_LC_SOC =VA_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MLRA_sub_order_LC_SOC_2001 <- rbind(VA_sub_order_LC_SOC, TN_sub_order_LC_SOC, NC_sub_order_LC_SOC, SC_sub_order_LC_SOC, LA_sub_order_LC_SOC, FL_sub_order_LC_SOC, MS_1_sub_order_LC_SOC, MS_2_sub_order_LC_SOC, GA_1_sub_order_LC_SOC, GA_2_sub_order_LC_SOC, AL_1_sub_order_LC_SOC, AL_2_sub_order_LC_SOC)
+
+MLRA_sub_order_LC_SOC_2001 =MLRA_sub_order_LC_SOC_2001%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  #filter(NLCD_2001 %in% c("21", "41", "42", "43", "52","81", "82", "90"))%>%
+  summarise(total_stock_2001=sum(total_stock_2001), SOC20_2001=mean(SOC20_2001), pixels_2001=sum(pixels_2001))
+
+MLRA_sub_order_LC_SOC_2001$NLCD_2001=as.factor(MLRA_sub_order_LC_SOC_2001$NLCD_2001)
+```
+
+```{r}
+
+AL_1_2016_Land_Cover_table=AL_1%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+AL_1_2011_Land_Cover_table=AL_1%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+AL_1_2006_Land_Cover_table=AL_1%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+AL_1_2001_Land_Cover_table=AL_1%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+AL_1_Land_Cover_table_1=full_join(AL_1_2016_Land_Cover_table, AL_1_2011_Land_Cover_table, by = "NLCD")
+
+AL_1_Land_Cover_table_2=full_join(AL_1_2006_Land_Cover_table, AL_1_2001_Land_Cover_table, by = "NLCD")
+
+AL_1_Land_Cover_table=full_join(AL_1_Land_Cover_table_1, AL_1_Land_Cover_table_2, by = "NLCD")
+```
+
+```{r}
+AL_2_2016_Land_Cover_table=AL_2%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+AL_2_2011_Land_Cover_table=AL_2%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+AL_2_2006_Land_Cover_table=AL_2%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+AL_2_2001_Land_Cover_table=AL_2%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+AL_2_Land_Cover_table_1=full_join(AL_2_2016_Land_Cover_table, AL_2_2011_Land_Cover_table, by = "NLCD")
+
+AL_2_Land_Cover_table_2=full_join(AL_2_2006_Land_Cover_table, AL_2_2001_Land_Cover_table, by = "NLCD")
+
+AL_2_Land_Cover_table=full_join(AL_2_Land_Cover_table_1, AL_2_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+AL_3_2016_Land_Cover_table=AL_3%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+AL_3_2011_Land_Cover_table=AL_3%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+AL_3_2006_Land_Cover_table=AL_3%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+AL_3_2001_Land_Cover_table=AL_3%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+AL_3_Land_Cover_table_1=full_join(AL_3_2016_Land_Cover_table, AL_3_2011_Land_Cover_table, by = "NLCD")
+
+AL_3_Land_Cover_table_2=full_join(AL_3_2006_Land_Cover_table, AL_3_2001_Land_Cover_table, by = "NLCD")
+
+AL_3_Land_Cover_table=full_join(AL_3_Land_Cover_table_1, AL_3_Land_Cover_table_2, by = "NLCD")
+```
+
+```{r}
+FL_2016_Land_Cover_table=FL%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+FL_2011_Land_Cover_table=FL%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+FL_2006_Land_Cover_table=FL%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+FL_2001_Land_Cover_table=FL%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+FL_Land_Cover_table_1=full_join(FL_2016_Land_Cover_table, FL_2011_Land_Cover_table, by = "NLCD")
+
+FL_Land_Cover_table_2=full_join(FL_2006_Land_Cover_table, FL_2001_Land_Cover_table, by = "NLCD")
+
+FL_Land_Cover_table=full_join(FL_Land_Cover_table_1, FL_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+LA_2016_Land_Cover_table=LA%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+LA_2011_Land_Cover_table=LA%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+LA_2006_Land_Cover_table=LA%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+LA_2001_Land_Cover_table=LA%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+LA_Land_Cover_table_1=full_join(LA_2016_Land_Cover_table, LA_2011_Land_Cover_table, by = "NLCD")
+
+LA_Land_Cover_table_2=full_join(LA_2006_Land_Cover_table, LA_2001_Land_Cover_table, by = "NLCD")
+
+LA_Land_Cover_table=full_join(LA_Land_Cover_table_1, LA_Land_Cover_table_2, by = "NLCD")
+```
+
+```{r}
+MS_1_2016_Land_Cover_table=MS_1%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+MS_1_2011_Land_Cover_table=MS_1%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+MS_1_2006_Land_Cover_table=MS_1%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+MS_1_2001_Land_Cover_table=MS_1%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+MS_1_Land_Cover_table_1=full_join(MS_1_2016_Land_Cover_table, MS_1_2011_Land_Cover_table, by = "NLCD")
+
+MS_1_Land_Cover_table_2=full_join(MS_1_2006_Land_Cover_table, MS_1_2001_Land_Cover_table, by = "NLCD")
+
+MS_1_Land_Cover_table=full_join(MS_1_Land_Cover_table_1, MS_1_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+MS_2_2016_Land_Cover_table=MS_2%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+MS_2_2011_Land_Cover_table=MS_2%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+MS_2_2006_Land_Cover_table=MS_2%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+MS_2_2001_Land_Cover_table=MS_2%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+MS_2_Land_Cover_table_1=full_join(MS_2_2016_Land_Cover_table, MS_2_2011_Land_Cover_table, by = "NLCD")
+
+MS_2_Land_Cover_table_2=full_join(MS_2_2006_Land_Cover_table, MS_2_2001_Land_Cover_table, by = "NLCD")
+
+MS_2_Land_Cover_table=full_join(MS_2_Land_Cover_table_1, MS_2_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+MS_3_2016_Land_Cover_table=MS_3%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+MS_3_2011_Land_Cover_table=MS_3%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+MS_3_2006_Land_Cover_table=MS_3%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+MS_3_2001_Land_Cover_table=MS_3%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+MS_3_Land_Cover_table_1=full_join(MS_3_2016_Land_Cover_table, MS_3_2011_Land_Cover_table, by = "NLCD")
+
+MS_3_Land_Cover_table_2=full_join(MS_3_2006_Land_Cover_table, MS_3_2001_Land_Cover_table, by = "NLCD")
+
+MS_3_Land_Cover_table=full_join(MS_3_Land_Cover_table_1, MS_3_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+NC_2016_Land_Cover_table=NC%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+NC_2011_Land_Cover_table=NC%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+NC_2006_Land_Cover_table=NC%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+NC_2001_Land_Cover_table=NC%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+NC_Land_Cover_table_1=full_join(NC_2016_Land_Cover_table, NC_2011_Land_Cover_table, by = "NLCD")
+
+NC_Land_Cover_table_2=full_join(NC_2006_Land_Cover_table, NC_2001_Land_Cover_table, by = "NLCD")
+
+NC_Land_Cover_table=full_join(NC_Land_Cover_table_1, NC_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+SC_2016_Land_Cover_table=SC%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+SC_2011_Land_Cover_table=SC%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+SC_2006_Land_Cover_table=SC%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+SC_2001_Land_Cover_table=SC%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+SC_Land_Cover_table_1=full_join(SC_2016_Land_Cover_table, SC_2011_Land_Cover_table, by = "NLCD")
+
+SC_Land_Cover_table_2=full_join(SC_2006_Land_Cover_table, SC_2001_Land_Cover_table, by = "NLCD")
+
+SC_Land_Cover_table=full_join(SC_Land_Cover_table_1, SC_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+TN_2016_Land_Cover_table=TN%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+TN_2011_Land_Cover_table=TN%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+TN_2006_Land_Cover_table=TN%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+TN_2001_Land_Cover_table=TN%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+TN_Land_Cover_table_1=full_join(TN_2016_Land_Cover_table, TN_2011_Land_Cover_table, by = "NLCD")
+
+TN_Land_Cover_table_2=full_join(TN_2006_Land_Cover_table, TN_2001_Land_Cover_table, by = "NLCD")
+
+TN_Land_Cover_table=full_join(TN_Land_Cover_table_1, TN_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+VA_2016_Land_Cover_table=VA%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+VA_2011_Land_Cover_table=VA%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+VA_2006_Land_Cover_table=VA%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+VA_2001_Land_Cover_table=VA%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+VA_Land_Cover_table_1=full_join(VA_2016_Land_Cover_table, VA_2011_Land_Cover_table, by = "NLCD")
+
+VA_Land_Cover_table_2=full_join(VA_2006_Land_Cover_table, VA_2001_Land_Cover_table, by = "NLCD")
+
+VA_Land_Cover_table=full_join(VA_Land_Cover_table_1, VA_Land_Cover_table_2, by = "NLCD")
+```

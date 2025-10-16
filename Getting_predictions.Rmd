@@ -1,0 +1,2022 @@
+---
+title: "DSP_Scale_predictions"
+author: "Rajneesh Sharma"
+date: "11/13/2022"
+output: html_document
+---
+
+```{r}
+#Importing libraries
+library(mlbench)
+library(e1071)
+library(lime)
+library(knitr)
+library(readxl)
+```
+
+```{r}
+#Importing Data
+
+setwd("E:/GIS/DSP_Scale_Model/Nov_13th_2022/R_files/DSP_Scale_predictions")
+
+Model_data=read_excel("Model_traing_3.xlsx",1)
+
+#Removing NA values
+DataFrame<-Model_data[complete.cases(Model_data),]
+
+#Converting characters to factors
+DataFrame$Landcover_Current=as.factor(DataFrame$Landcover_Current)
+DataFrame$Landcover_10years_prior=as.factor(DataFrame$Landcover_10years_prior)
+DataFrame$Erosion_Class=as.factor(DataFrame$Erosion_Class)
+DataFrame$Drainage_Class=as.factor(DataFrame$Drainage_Class)
+DataFrame$Hydrologic_Soil_Group=as.factor(DataFrame$Hydrologic_Soil_Group)
+DataFrame$Soil_Order=as.factor(DataFrame$Soil_Order)
+DataFrame$Soil_Suborder=as.factor(DataFrame$Soil_Suborder)
+DataFrame$Soil_Sub_Order_mod=as.factor(DataFrame$Soil_Sub_Order_mod)
+DataFrame$Soil_Great_Group=as.factor(DataFrame$Soil_Great_Group)
+DataFrame$Particle_Size=as.factor(DataFrame$Particle_Size)
+DataFrame$Soil_Great_Group_mod=as.factor(DataFrame$Soil_Great_Group_mod)
+DataFrame$Soil_Sub_Group_mod=as.factor(DataFrame$Soil_Sub_Group_mod)
+DataFrame$Aquic_or_not=as.factor(DataFrame$Aquic_or_not)
+DataFrame$Minerology=as.factor(DataFrame$Minerology)
+DataFrame$linear_Aspect=-(cos(((DataFrame$Aspect-45))*pi/180))
+DataFrame$Particle_Size[DataFrame$Particle_Size == "sandy-skeletal"] <- "sandy"
+
+#Checking structure before training model
+str(DataFrame)
+
+#Spliting data into training and testing
+mydata <- DataFrame
+set.seed(123) 
+ind <- sample(2, nrow(mydata), replace = T, prob = c(0.7, 0.3))
+train <- mydata[ind == 1,]
+
+test <- mydata[ind == 2,]
+```
+
+```{r}
+# Creating Simple RF
+library(randomForest)
+set.seed(1234)
+forest2 <- randomForest(SOC_stock~	MAT+	MAP+	Landcover_Current+	Landcover_10years_prior+	Erosion_Class+	Drainage_Class+	Hydrologic_Soil_Group+	Soil_Order+	Soil_Sub_Order_mod+	Particle_Size +
+                          	Soil_pH+	Elevation+
+                          Slope+	linear_Aspect+
+                          Soil_Great_Group_mod +	Soil_Sub_Group_mod
+                        , 
+             data=train,
+             ntree = 500,
+             mtry=1, importance= TRUE)
+plot(forest2)
+forest2
+
+# Validation
+test$predictions <-  predict(forest2,  test)
+
+sqrt(mean((test$SOC_stock - test$predictions)^2))
+cor(test$SOC_stock, test$predictions) ^2
+
+lm_SOC3= lm(test$SOC_stock~ test$predictions)
+summary(lm_SOC3)
+
+#Performance on training data
+rf_train2 <-  predict(forest2,  train)
+lm_SOC4= lm(train$SOC_stock~ rf_train2)
+summary(lm_SOC4)
+
+library(Metrics)
+library(tidyverse)
+
+Mean_pecent_error = sum((test$predictions - test$SOC_stock/test$SOC_stock)*100)/405
+
+
+plot(forest2)
+varImpPlot(forest2)
+
+# Get importance values as a data frame
+imp2 = as.data.frame(importance(forest2))
+imp2 = cbind(vars=rownames(imp2), imp2)
+
+
+barplot(imp2$`%IncMSE`, names.arg=imp2$vars, order= TRUE)
+
+library(plotly)
+
+Fig_5=plot_ly(imp2, labels = imp2$vars, values = imp2$`%IncMSE`, type = 'pie')
+Fig_5
+ggsave("Fig_5_try.jpg", width = 10, height = 8, units = c("cm"), dpi = 300)
+
+plotly_IMAGE(Fig_5, format = "png", out_file = "E:/Manuscripts/DSP-Scale Model/figures/output.png")
+
+plotly::export(p = fig2, #the graph to export
+               file = "E:/Manuscripts/DSP-Scale Model/figures/graph 1.png") #the name and type of file (can be .png, .jpeg, etc.)
+
+write.csv(imp2, "C:/Users/rs15235/OneDrive - University of Georgia/Manuscripts/DSP-Scale Model/Figure_codes_R/var_imp.csv")
+
+```
+Error Density Plot
+```{r}
+P1=ggplot(test, aes(x=SOC_stock, y=predictions) ) +
+  geom_hex(bins = 25) +
+  scale_fill_continuous(type = "viridis") +
+  xlab("Observed SOC20 (Mg/ha)")+
+  ylab("Predicted SOC20 (Mg/ha)")+
+  theme_bw()+
+  annotate("text", x = 50, y =400, label = "paste(italic(R) ^ 2, \" = 58.5\")", parse = TRUE)+
+  annotate("text", x = 70, y =375, label = "paste(italic(CCC), \" = 0.69\")", parse = TRUE)+
+  annotate("text", x = 100, y =350, label = "paste(italic(MAE), \" = 23 Mg/ha\")", parse = TRUE)+
+  annotate("text", x = 95, y =325, label = "paste(italic(ME), \" = -2.2 Mg/ha\")", parse = TRUE)+
+  geom_abline(intercept = c(0), slope = 1,  
+                 color = c("darkred"), linetype="dashed")+
+  guides(fill=guide_legend(title="Count"))
+
+P2=ggplot(test, aes(x=SOC_stock, y=predictions, fill=Soil_Order) ) +
+  geom_hex(alpha = 0.7) +
+  scale_fill_brewer(palette = "Dark2")+
+  xlab("Observed SOC20 (Mg/ha)")+
+  ylab("Predicted SOC20 (Mg/ha)")+
+  theme_bw()+
+  geom_abline(intercept = c(0), slope = 1,  
+                 color = c("darkred"), linetype="dashed")+
+  guides(fill=guide_legend(title="Soil Order"))
+
+P3_data=test%>%
+  filter(!Landcover_Current %in% c('21', '23'))
+
+cols <- c("8" = "red", "4" = "blue", "6" = "darkgreen", "10" = "orange")
+P3=ggplot(P3_data ,aes(x=SOC_stock, y=predictions, fill=Landcover_Current) ) +
+  geom_hex(alpha = 0.7) +
+  scale_fill_manual(values = c("31" = "#B2ADA3",
+                                "41" ="#68AA63",
+                                "42" ="#1C6330",
+                                "43" ="#B5C98E",
+                                "52" ="#CCBA7C",
+                                "71" ="#E2E2C1",
+                                "81" ="#DBD83D",
+                                "82" ="#AA7028",
+                                "90" ="#BAD8EA",
+                                "95" ="#70A3BA"),
+                    labels = c("31" = "Barren Land",
+                                "41" ="Deciduous Forest",
+                                "42" ="Evergreen Forest",
+                                "43" ="Mixed Forest",
+                                "52" ="Scrub/Shrub",
+                                "71" ="Grassland",
+                                "81" ="Pasture/Hay",
+                                "82" ="Cultivated Crops",
+                                "90" ="Woody Wetlands",
+                                "95" ="Emergent Wetlands"))+
+  xlab("Observed SOC20 (Mg/ha)")+
+  ylab("Predicted SOC20 (Mg/ha)")+
+  theme_bw()+
+  geom_abline(intercept = c(0), slope = 1,  
+                 color = c("darkred"), linetype="dashed")+
+  guides(fill=guide_legend(title="Land Cover"))
+
+P4=ggplot(test, aes(x=SOC_stock, y=predictions, fill=Aquic_or_not) ) +
+  geom_hex(alpha = 0.7) +
+  scale_fill_brewer(palette = "Dark2")+
+  xlab("Observed SOC20 (Mg/ha)")+
+  ylab("Predicted SOC20 (Mg/ha)")+
+  theme_bw()+
+  geom_abline(intercept = c(0), slope = 1,  
+                 color = c("darkred"), linetype="dashed")+
+  guides(fill=guide_legend(title="Aquic or not"))
+
+Fig_4=ggarrange(P1, P2, P3, P4, ncol= 2, nrow = 2, common.legend = FALSE, labels = c("A", "B", "C", "D") )
+Fig_4
+ggsave("Fig_4.jpeg", width = 10, height = 7, dpi=2000)
+```
+SVM
+
+```{r}
+# Creating SVM
+library(e1071)
+set.seed(1234)
+forest2 <- svm(SOC_stock~	MAT+	MAP+	Landcover_Current+	Landcover_10years_prior+	Erosion_Class+	Drainage_Class+	Hydrologic_Soil_Group+	Soil_Order+	Soil_Sub_Order_mod+	Particle_Size +
+                          	Soil_pH+	Elevation+
+                          Slope+	linear_Aspect+
+                          Soil_Great_Group_mod +	Soil_Sub_Group_mod
+                        , 
+             data=train)
+plot(forest2)
+forest2
+
+# Validation
+test$predictions <-  predict(forest2,  test)
+
+sqrt(mean((test$SOC_stock - test$predictions)^2))
+cor(test$SOC_stock, test$predictions) ^2
+
+lm_SOC3= lm(test$SOC_stock~ test$predictions)
+summary(lm_SOC3)
+
+#Performance on training data
+rf_train2 <-  predict(forest2,  train)
+lm_SOC4= lm(train$SOC_stock~ rf_train2)
+summary(lm_SOC4)
+
+library(Metrics)
+library(tidyverse)
+
+Mean_pecent_error = sum((test$predictions - test$SOC_stock/test$SOC_stock)*100)/405
+
+mae(test$SOC_stock, test$predictions)
+
+
+
+plot(forest2)
+varImpPlot(forest2)
+
+# Get importance values as a data frame
+imp2 = as.data.frame(importance(forest2))
+imp2 = cbind(vars=rownames(imp2), imp2)
+
+
+barplot(imp2$`%IncMSE`, names.arg=imp2$vars, order= TRUE)
+
+library(plotly)
+fig2 <- plot_ly(imp2, labels = imp2$vars, values = imp2$`%IncMSE`, type = 'pie')
+
+fig2
+
+export(fig2, file = "E:/Manuscripts/DSP-Scale Model/figures/image_2.jpeg")
+
+plotly_IMAGE(fig2, width = 2000, height = 2000, format = "png", scale = 2,
+             out_file = "E:/Manuscripts/DSP-Scale Model/figures/image_3.png")
+
+plotly::export(p = fig2, #the graph to export
+               file = "graph 1.png") #the name and type of file (can be .png, .jpeg, etc.)
+```
+
+
+
+
+
+
+
+
+
+```{r}
+#Mississippi Part 1
+MS_1 <- read_excel("MS_mupoint_250_covar_1_mod.xlsx", 1)
+MS_1$Erosion_Class[is.na(MS_1$Erosion_Class)] <- "Unknown"
+MS_1$linear_Aspect=-(cos(((MS_1$Aspect-45))*pi/180))
+
+MS_1<-MS_1[complete.cases(MS_1),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+MS_1 = filter(MS_1, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+MS_1$NLCD_2016[MS_1$NLCD_2016 == "22"] <- "21"
+MS_1$NLCD_2016[MS_1$NLCD_2016 == "24"] <- "23"
+
+MS_1 = filter(MS_1, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+MS_1$NLCD_2011[MS_1$NLCD_2011 == "22"] <- "21"
+MS_1$NLCD_2011[MS_1$NLCD_2011 == "24"] <- "23"
+
+MS_1 = filter(MS_1, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+MS_1$NLCD_2006[MS_1$NLCD_2006 == "22"] <- "21"
+MS_1$NLCD_2006[MS_1$NLCD_2006 == "24"] <- "23"
+
+
+MS_1 = filter(MS_1, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+MS_1$NLCD_2001[MS_1$NLCD_2001 == "22"] <- "21"
+MS_1$NLCD_2001[MS_1$NLCD_2001 == "24"] <- "23"
+
+MS_1 = filter(MS_1, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+MS_1$NLCD_1992[MS_1$NLCD_1992 == "85"] <- "21"
+MS_1$NLCD_1992[MS_1$NLCD_1992 == "22"] <- "23"
+MS_1$NLCD_1992[MS_1$NLCD_1992 == "32"] <- "31"
+MS_1$NLCD_1992[MS_1$NLCD_1992 == "33"] <- "31"
+MS_1$NLCD_1992[MS_1$NLCD_1992 == "91"] <- "90"
+MS_1$NLCD_1992[MS_1$NLCD_1992 == "92"] <- "95"
+
+MS_1$Particle_Size[MS_1$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+MS_1$Particle_Size[MS_1$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+MS_1 <- na.omit(MS_1) 
+MS_1<-MS_1[complete.cases(MS_1),]
+
+MS_1$Landcover_Current=as.factor(MS_1$NLCD_2016)
+MS_1$Landcover_10years_prior=as.factor(MS_1$NLCD_2006)
+
+MS_1$Landcover_Current=as.factor(MS_1$Landcover_Current)
+MS_1$Landcover_10years_prior=as.factor(MS_1$Landcover_10years_prior)
+
+MS_1$Erosion_Class=as.factor(MS_1$Erosion_Class)
+MS_1$Drainage_Class=as.factor(MS_1$Drainage_Class)
+MS_1$Hydrologic_Soil_Group=as.factor(MS_1$Hydrologic_Soil_Group)
+MS_1$Soil_Order=as.factor(MS_1$Soil_Order)
+MS_1$Soil_Sub_Order_mod=as.factor(MS_1$Soil_Sub_Order_mod)
+MS_1$Particle_Size=as.factor(MS_1$Particle_Size)
+MS_1$Soil_Great_Group_mod=as.factor(MS_1$Soil_Great_Group_mod)
+MS_1$Soil_Sub_Group_mod=as.factor(MS_1$Soil_Sub_Group_mod)
+
+levels(MS_1$Soil_Order) <- levels(train$Soil_Order)
+levels(MS_1$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(MS_1$Particle_Size) <- levels(train$Particle_Size)
+levels(MS_1$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+
+#Predictions for MS 2016
+MS_1_pred_2016 <-  predict(forest2, MS_1)
+MS_1$SOC_pred_2016=MS_1_pred_2016
+
+#Predictions for MS 2011
+MS_1$Landcover_Current=as.factor(MS_1$NLCD_2011)
+MS_1$Landcover_10years_prior=as.factor(MS_1$NLCD_2001)
+
+MS_1_pred_2011 <-  predict(forest2, MS_1)
+MS_1$SOC_pred_2011=MS_1_pred_2011
+
+#Predictions for MS 2006
+MS_1$Landcover_Current=as.factor(MS_1$NLCD_2006)
+MS_1$Landcover_10years_prior=as.factor(MS_1$NLCD_1992)
+
+levels(MS_1$Landcover_Current) <- levels(train$Landcover_Current)
+levels(MS_1$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+MS_1_pred_2006 <-  predict(forest2, MS_1)
+MS_1$SOC_pred_2006=MS_1_pred_2006
+
+#Predictions for MS 2001
+MS_1$Landcover_Current=as.factor(MS_1$NLCD_2001)
+MS_1$Landcover_10years_prior=as.factor(MS_1$NLCD_1992)
+
+levels(MS_1$Landcover_Current) <- levels(train$Landcover_Current)
+levels(MS_1$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+MS_1_pred_2001 <-  predict(forest2, MS_1)
+MS_1$SOC_pred_2001=MS_1_pred_2001
+
+#Exporting file
+write.csv(MS_1,"Predictions/MS_1.csv")
+
+MS_1_pred = MS_1%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(MS_1_pred,"Predictions/Just_predictions_and_pointID/MS_1.csv")
+```
+
+MS part 2
+```{r}
+MS_2 <- read_excel("MS_mupoint_250_covar_2_mod.xlsx", 1)
+MS_2$Erosion_Class[is.na(MS_2$Erosion_Class)] <- "Unknown"
+MS_2$linear_Aspect=-(cos(((MS_2$Aspect-45))*pi/180))
+
+MS_2<-MS_2[complete.cases(MS_2),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+MS_2 = filter(MS_2, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+MS_2$NLCD_2016[MS_2$NLCD_2016 == "22"] <- "21"
+MS_2$NLCD_2016[MS_2$NLCD_2016 == "24"] <- "23"
+
+MS_2 = filter(MS_2, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+MS_2$NLCD_2011[MS_2$NLCD_2011 == "22"] <- "21"
+MS_2$NLCD_2011[MS_2$NLCD_2011 == "24"] <- "23"
+
+MS_2 = filter(MS_2, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+MS_2$NLCD_2006[MS_2$NLCD_2006 == "22"] <- "21"
+MS_2$NLCD_2006[MS_2$NLCD_2006 == "24"] <- "23"
+
+
+MS_2 = filter(MS_2, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+MS_2$NLCD_2001[MS_2$NLCD_2001 == "22"] <- "21"
+MS_2$NLCD_2001[MS_2$NLCD_2001 == "24"] <- "23"
+
+MS_2 = filter(MS_2, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+MS_2$NLCD_1992[MS_2$NLCD_1992 == "85"] <- "21"
+MS_2$NLCD_1992[MS_2$NLCD_1992 == "22"] <- "23"
+MS_2$NLCD_1992[MS_2$NLCD_1992 == "32"] <- "31"
+MS_2$NLCD_1992[MS_2$NLCD_1992 == "33"] <- "31"
+MS_2$NLCD_1992[MS_2$NLCD_1992 == "91"] <- "90"
+MS_2$NLCD_1992[MS_2$NLCD_1992 == "92"] <- "95"
+
+MS_2$Particle_Size[MS_2$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+MS_2$Particle_Size[MS_2$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+MS_2$Erosion_Class=as.factor(MS_2$Erosion_Class)
+MS_2$Drainage_Class=as.factor(MS_2$Drainage_Class)
+MS_2$Hydrologic_Soil_Group=as.factor(MS_2$Hydrologic_Soil_Group)
+MS_2$Soil_Order=as.factor(MS_2$Soil_Order)
+MS_2$Soil_Sub_Order_mod=as.factor(MS_2$Soil_Sub_Order_mod)
+MS_2$Particle_Size=as.factor(MS_2$Particle_Size)
+MS_2$Soil_Great_Group_mod=as.factor(MS_2$Soil_Great_Group_mod)
+MS_2$Soil_Sub_Group_mod=as.factor(MS_2$Soil_Sub_Group_mod)
+
+levels(MS_2$Soil_Order) <- levels(train$Soil_Order)
+levels(MS_2$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(MS_2$Particle_Size) <- levels(train$Particle_Size)
+levels(MS_2$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+
+#Predictions for MS 2016
+MS_2$Landcover_Current=as.factor(MS_2$NLCD_2016)
+MS_2$Landcover_10years_prior=as.factor(MS_2$NLCD_2006)
+
+MS_2$Landcover_Current=as.factor(MS_2$Landcover_Current)
+MS_2$Landcover_10years_prior=as.factor(MS_2$Landcover_10years_prior)
+
+MS_2_pred_2016 <-  predict(forest2, MS_2)
+MS_2$SOC_pred_2016=MS_2_pred_2016
+
+#Predictions for MS 2011
+MS_2$Landcover_Current=as.factor(MS_2$NLCD_2011)
+MS_2$Landcover_10years_prior=as.factor(MS_2$NLCD_2001)
+
+MS_2_pred_2011 <-  predict(forest2, MS_2)
+MS_2$SOC_pred_2011=MS_2_pred_2011
+
+#Predictions for MS 2006
+MS_2$Landcover_Current=as.factor(MS_2$NLCD_2006)
+MS_2$Landcover_10years_prior=as.factor(MS_2$NLCD_1992)
+
+levels(MS_2$Landcover_Current) <- levels(train$Landcover_Current)
+levels(MS_2$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+MS_2_pred_2006 <-  predict(forest2, MS_2)
+MS_2$SOC_pred_2006=MS_2_pred_2006
+
+#Predictions for MS 2001
+MS_2$Landcover_Current=as.factor(MS_2$NLCD_2001)
+MS_2$Landcover_10years_prior=as.factor(MS_2$NLCD_1992)
+
+levels(MS_2$Landcover_Current) <- levels(train$Landcover_Current)
+levels(MS_2$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+MS_2_pred_2001 <-  predict(forest2, MS_2)
+MS_2$SOC_pred_2001=MS_2_pred_2001
+
+#Exporting file
+write.csv(MS_2,"Predictions/MS_2.csv")
+
+MS_2_pred = MS_2%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(MS_2_pred,"Predictions/Just_predictions_and_pointID/MS_2.csv")
+```
+
+
+
+
+MS part 3
+```{r}
+MS_3 <- read_excel("MS_mupoint_250_covar_3_mod.xlsx", 1)
+MS_3$Erosion_Class[is.na(MS_3$Erosion_Class)] <- "Unknown"
+MS_3$linear_Aspect=-(cos(((MS_3$Aspect-45))*pi/180))
+
+MS_3<-MS_3[complete.cases(MS_3),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+MS_3 = filter(MS_3, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+MS_3$NLCD_2016[MS_3$NLCD_2016 == "22"] <- "21"
+MS_3$NLCD_2016[MS_3$NLCD_2016 == "24"] <- "23"
+
+MS_3 = filter(MS_3, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+MS_3$NLCD_2011[MS_3$NLCD_2011 == "22"] <- "21"
+MS_3$NLCD_2011[MS_3$NLCD_2011 == "24"] <- "23"
+
+MS_3 = filter(MS_3, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+MS_3$NLCD_2006[MS_3$NLCD_2006 == "22"] <- "21"
+MS_3$NLCD_2006[MS_3$NLCD_2006 == "24"] <- "23"
+
+
+MS_3 = filter(MS_3, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+MS_3$NLCD_2001[MS_3$NLCD_2001 == "22"] <- "21"
+MS_3$NLCD_2001[MS_3$NLCD_2001 == "24"] <- "23"
+
+MS_3 = filter(MS_3, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+MS_3$NLCD_1992[MS_3$NLCD_1992 == "85"] <- "21"
+MS_3$NLCD_1992[MS_3$NLCD_1992 == "22"] <- "23"
+MS_3$NLCD_1992[MS_3$NLCD_1992 == "32"] <- "31"
+MS_3$NLCD_1992[MS_3$NLCD_1992 == "33"] <- "31"
+MS_3$NLCD_1992[MS_3$NLCD_1992 == "91"] <- "90"
+MS_3$NLCD_1992[MS_3$NLCD_1992 == "92"] <- "95"
+
+MS_3$Particle_Size[MS_3$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+MS_3$Particle_Size[MS_3$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+MS_3$Erosion_Class=as.factor(MS_3$Erosion_Class)
+MS_3$Drainage_Class=as.factor(MS_3$Drainage_Class)
+MS_3$Hydrologic_Soil_Group=as.factor(MS_3$Hydrologic_Soil_Group)
+MS_3$Soil_Order=as.factor(MS_3$Soil_Order)
+MS_3$Soil_Sub_Order_mod=as.factor(MS_3$Soil_Sub_Order_mod)
+MS_3$Particle_Size=as.factor(MS_3$Particle_Size)
+MS_3$Soil_Great_Group_mod=as.factor(MS_3$Soil_Great_Group_mod)
+MS_3$Soil_Sub_Group_mod=as.factor(MS_3$Soil_Sub_Group_mod)
+
+levels(MS_3$Soil_Order) <- levels(train$Soil_Order)
+levels(MS_3$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(MS_3$Particle_Size) <- levels(train$Particle_Size)
+levels(MS_3$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(MS_3$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+
+#Predictions for MS 2016
+MS_3$Landcover_Current=as.factor(MS_3$NLCD_2016)
+MS_3$Landcover_10years_prior=as.factor(MS_3$NLCD_2006)
+
+levels(MS_3$Landcover_Current) <- levels(train$Landcover_Current)
+levels(MS_3$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+MS_3_pred_2016 <-  predict(forest2, MS_3)
+MS_3$SOC_pred_2016=MS_3_pred_2016
+
+#Predictions for MS 2011
+MS_3$Landcover_Current=as.factor(MS_3$NLCD_2011)
+MS_3$Landcover_10years_prior=as.factor(MS_3$NLCD_2001)
+
+MS_3_pred_2011 <-  predict(forest2, MS_3)
+MS_3$SOC_pred_2011=MS_3_pred_2011
+
+#Predictions for MS 2006
+MS_3$Landcover_Current=as.factor(MS_3$NLCD_2006)
+MS_3$Landcover_10years_prior=as.factor(MS_3$NLCD_1992)
+
+levels(MS_3$Landcover_Current) <- levels(train$Landcover_Current)
+levels(MS_3$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+MS_3_pred_2006 <-  predict(forest2, MS_3)
+MS_3$SOC_pred_2006=MS_3_pred_2006
+
+#Predictions for MS 2001
+MS_3$Landcover_Current=as.factor(MS_3$NLCD_2001)
+MS_3$Landcover_10years_prior=as.factor(MS_3$NLCD_1992)
+
+levels(MS_3$Landcover_Current) <- levels(train$Landcover_Current)
+levels(MS_3$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+MS_3_pred_2001 <-  predict(forest2, MS_3)
+MS_3$SOC_pred_2001=MS_3_pred_2001
+
+#Exporting file
+write.csv(MS_3,"Predictions/MS_3.csv")
+
+MS_3_pred = MS_3%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(MS_3_pred,"Predictions/Just_predictions_and_pointID/MS_3.csv")
+```
+
+
+Florida
+```{r}
+FL <- read_excel("FL_mupoint_250_covar_mod.xlsx", 1)
+FL$Erosion_Class[is.na(FL$Erosion_Class)] <- "Unknown"
+FL$linear_Aspect=-(cos(((FL$Aspect-45))*pi/180))
+
+FL<-FL[complete.cases(FL),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+FL = filter(FL, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+FL$NLCD_2016[FL$NLCD_2016 == "22"] <- "21"
+FL$NLCD_2016[FL$NLCD_2016 == "24"] <- "23"
+
+FL = filter(FL, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+FL$NLCD_2011[FL$NLCD_2011 == "22"] <- "21"
+FL$NLCD_2011[FL$NLCD_2011 == "24"] <- "23"
+
+FL = filter(FL, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+FL$NLCD_2006[FL$NLCD_2006 == "22"] <- "21"
+FL$NLCD_2006[FL$NLCD_2006 == "24"] <- "23"
+
+
+FL = filter(FL, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+FL$NLCD_2001[FL$NLCD_2001 == "22"] <- "21"
+FL$NLCD_2001[FL$NLCD_2001 == "24"] <- "23"
+
+FL = filter(FL, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+FL$NLCD_1992[FL$NLCD_1992 == "85"] <- "21"
+FL$NLCD_1992[FL$NLCD_1992 == "22"] <- "23"
+FL$NLCD_1992[FL$NLCD_1992 == "32"] <- "31"
+FL$NLCD_1992[FL$NLCD_1992 == "33"] <- "31"
+FL$NLCD_1992[FL$NLCD_1992 == "91"] <- "90"
+FL$NLCD_1992[FL$NLCD_1992 == "92"] <- "95"
+FL$NLCD_1992[FL$NLCD_1992 == "51"] <- "52"
+FL$NLCD_1992[FL$NLCD_1992 == "61"] <- "71"
+
+FL$Particle_Size[FL$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+FL$Particle_Size[FL$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+FL$Soil_Order[FL$Soil_Order == "Mollisols"] <- "Alfisols"
+
+FL$Erosion_Class=as.factor(FL$Erosion_Class)
+FL$Drainage_Class=as.factor(FL$Drainage_Class)
+FL$Hydrologic_Soil_Group=as.factor(FL$Hydrologic_Soil_Group)
+FL$Soil_Order=as.factor(FL$Soil_Order)
+FL$Soil_Sub_Order_mod=as.factor(FL$Soil_Sub_Order_mod)
+FL$Particle_Size=as.factor(FL$Particle_Size)
+FL$Soil_Great_Group_mod=as.factor(FL$Soil_Great_Group_mod)
+FL$Soil_Sub_Group_mod=as.factor(FL$Soil_Sub_Group_mod)
+
+levels(FL$Soil_Order) <- levels(train$Soil_Order)
+levels(FL$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(FL$Particle_Size) <- levels(train$Particle_Size)
+levels(FL$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(FL$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+levels(FL$Erosion_Class) <- levels(train$Erosion_Class)
+
+#Predictions for MS 2016
+FL$Landcover_Current=as.factor(FL$NLCD_2016)
+FL$Landcover_10years_prior=as.factor(FL$NLCD_2006)
+
+levels(FL$Landcover_Current) <- levels(train$Landcover_Current)
+levels(FL$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+FL_pred_2016 <-  predict(forest2, FL)
+FL$SOC_pred_2016=FL_pred_2016
+
+#Predictions for MS 2011
+FL$Landcover_Current=as.factor(FL$NLCD_2011)
+FL$Landcover_10years_prior=as.factor(FL$NLCD_2001)
+
+FL_pred_2011 <-  predict(forest2, FL)
+FL$SOC_pred_2011=FL_pred_2011
+
+#Predictions for MS 2006
+FL$Landcover_Current=as.factor(FL$NLCD_2006)
+FL$Landcover_10years_prior=as.factor(FL$NLCD_1992)
+
+levels(FL$Landcover_Current) <- levels(train$Landcover_Current)
+levels(FL$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+FL_pred_2006 <-  predict(forest2, FL)
+FL$SOC_pred_2006=FL_pred_2006
+
+#Predictions for MS 2001
+FL$Landcover_Current=as.factor(FL$NLCD_2001)
+FL$Landcover_10years_prior=as.factor(FL$NLCD_1992)
+
+levels(FL$Landcover_Current) <- levels(train$Landcover_Current)
+levels(FL$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+FL_pred_2001 <-  predict(forest2, FL)
+FL$SOC_pred_2001=FL_pred_2001
+
+#Exporting file
+write.csv(FL,"Predictions/FL.csv")
+
+FL_pred = FL%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(FL_pred,"Predictions/Just_predictions_and_pointID/FL.csv")
+```
+
+Lousiana
+```{r}
+LA <- read_excel("LA_mupoint_250_covar_mod.xlsx", 1)
+LA$Erosion_Class[is.na(LA$Erosion_Class)] <- "Unknown"
+LA$linear_Aspect=-(cos(((LA$Aspect-45))*pi/180))
+
+LA<-LA[complete.cases(LA),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+LA = filter(LA, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+LA$NLCD_2016[LA$NLCD_2016 == "22"] <- "21"
+LA$NLCD_2016[LA$NLCD_2016 == "24"] <- "23"
+
+LA = filter(LA, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+LA$NLCD_2011[LA$NLCD_2011 == "22"] <- "21"
+LA$NLCD_2011[LA$NLCD_2011 == "24"] <- "23"
+
+LA = filter(LA, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+LA$NLCD_2006[LA$NLCD_2006 == "22"] <- "21"
+LA$NLCD_2006[LA$NLCD_2006 == "24"] <- "23"
+
+
+LA = filter(LA, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+LA$NLCD_2001[LA$NLCD_2001 == "22"] <- "21"
+LA$NLCD_2001[LA$NLCD_2001 == "24"] <- "23"
+
+LA = filter(LA, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+LA$NLCD_1992[LA$NLCD_1992 == "85"] <- "21"
+LA$NLCD_1992[LA$NLCD_1992 == "22"] <- "23"
+LA$NLCD_1992[LA$NLCD_1992 == "32"] <- "31"
+LA$NLCD_1992[LA$NLCD_1992 == "33"] <- "31"
+LA$NLCD_1992[LA$NLCD_1992 == "91"] <- "90"
+LA$NLCD_1992[LA$NLCD_1992 == "92"] <- "95"
+LA$NLCD_1992[LA$NLCD_1992 == "51"] <- "52"
+LA$NLCD_1992[LA$NLCD_1992 == "61"] <- "71"
+
+LA$Particle_Size[LA$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+LA$Particle_Size[LA$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+LA$Soil_Order[LA$Soil_Order == "Mollisols"] <- "Alfisols"
+
+LA$Erosion_Class=as.factor(LA$Erosion_Class)
+LA$Drainage_Class=as.factor(LA$Drainage_Class)
+LA$Hydrologic_Soil_Group=as.factor(LA$Hydrologic_Soil_Group)
+LA$Soil_Order=as.factor(LA$Soil_Order)
+LA$Soil_Sub_Order_mod=as.factor(LA$Soil_Sub_Order_mod)
+LA$Particle_Size=as.factor(LA$Particle_Size)
+LA$Soil_Great_Group_mod=as.factor(LA$Soil_Great_Group_mod)
+LA$Soil_Sub_Group_mod=as.factor(LA$Soil_Sub_Group_mod)
+
+levels(LA$Soil_Order) <- levels(train$Soil_Order)
+levels(LA$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(LA$Particle_Size) <- levels(train$Particle_Size)
+levels(LA$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(LA$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+levels(LA$Erosion_Class) <- levels(train$Erosion_Class)
+levels(LA$Drainage_Class) <- levels(train$Drainage_Class)
+levels(LA$Hydrologic_Soil_Group) <- levels(train$Hydrologic_Soil_Group)
+
+#Predictions for MS 2016
+LA$Landcover_Current=as.factor(LA$NLCD_2016)
+LA$Landcover_10years_prior=as.factor(LA$NLCD_2006)
+
+levels(LA$Landcover_Current) <- levels(train$Landcover_Current)
+levels(LA$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+LA_pred_2016 <-  predict(forest2, LA)
+LA$SOC_pred_2016=LA_pred_2016
+
+#Predictions for MS 2011
+LA$Landcover_Current=as.factor(LA$NLCD_2011)
+LA$Landcover_10years_prior=as.factor(LA$NLCD_2001)
+
+LA_pred_2011 <-  predict(forest2, LA)
+LA$SOC_pred_2011=LA_pred_2011
+
+#Predictions for MS 2006
+LA$Landcover_Current=as.factor(LA$NLCD_2006)
+LA$Landcover_10years_prior=as.factor(LA$NLCD_1992)
+
+levels(LA$Landcover_Current) <- levels(train$Landcover_Current)
+levels(LA$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+LA_pred_2006 <-  predict(forest2, LA)
+LA$SOC_pred_2006=LA_pred_2006
+
+#Predictions for MS 2001
+LA$Landcover_Current=as.factor(LA$NLCD_2001)
+LA$Landcover_10years_prior=as.factor(LA$NLCD_1992)
+
+levels(LA$Landcover_Current) <- levels(train$Landcover_Current)
+levels(LA$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+LA_pred_2001 <-  predict(forest2, LA)
+LA$SOC_pred_2001=LA_pred_2001
+
+#Exporting file
+write.csv(LA,"Predictions/LA.csv")
+
+LA_pred = LA%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(LA_pred,"Predictions/Just_predictions_and_pointID/LA.csv")
+```
+
+North Carolina
+
+```{r}
+NC <- read_excel("NC_mupoint_250_covar_mod.xlsx", 1)
+NC$Erosion_Class[is.na(NC$Erosion_Class)] <- "Unknown"
+NC$linear_Aspect=-(cos(((NC$Aspect-45))*pi/180))
+
+NC<-NC[complete.cases(NC),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+NC = filter(NC, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+NC$NLCD_2016[NC$NLCD_2016 == "22"] <- "21"
+NC$NLCD_2016[NC$NLCD_2016 == "24"] <- "23"
+
+NC = filter(NC, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+NC$NLCD_2011[NC$NLCD_2011 == "22"] <- "21"
+NC$NLCD_2011[NC$NLCD_2011 == "24"] <- "23"
+
+NC = filter(NC, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+NC$NLCD_2006[NC$NLCD_2006 == "22"] <- "21"
+NC$NLCD_2006[NC$NLCD_2006 == "24"] <- "23"
+
+
+NC = filter(NC, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+NC$NLCD_2001[NC$NLCD_2001 == "22"] <- "21"
+NC$NLCD_2001[NC$NLCD_2001 == "24"] <- "23"
+
+NC = filter(NC, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+NC$NLCD_1992[NC$NLCD_1992 == "85"] <- "21"
+NC$NLCD_1992[NC$NLCD_1992 == "22"] <- "23"
+NC$NLCD_1992[NC$NLCD_1992 == "32"] <- "31"
+NC$NLCD_1992[NC$NLCD_1992 == "33"] <- "31"
+NC$NLCD_1992[NC$NLCD_1992 == "91"] <- "90"
+NC$NLCD_1992[NC$NLCD_1992 == "92"] <- "95"
+NC$NLCD_1992[NC$NLCD_1992 == "51"] <- "52"
+NC$NLCD_1992[NC$NLCD_1992 == "61"] <- "71"
+
+NC$Particle_Size[NC$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+NC$Particle_Size[NC$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+NC$Soil_Order[NC$Soil_Order == "Mollisols"] <- "Alfisols"
+
+NC$Erosion_Class=as.factor(NC$Erosion_Class)
+NC$Drainage_Class=as.factor(NC$Drainage_Class)
+NC$Hydrologic_Soil_Group=as.factor(NC$Hydrologic_Soil_Group)
+NC$Soil_Order=as.factor(NC$Soil_Order)
+NC$Soil_Sub_Order_mod=as.factor(NC$Soil_Sub_Order_mod)
+NC$Particle_Size=as.factor(NC$Particle_Size)
+NC$Soil_Great_Group_mod=as.factor(NC$Soil_Great_Group_mod)
+NC$Soil_Sub_Group_mod=as.factor(NC$Soil_Sub_Group_mod)
+
+levels(NC$Soil_Order) <- levels(train$Soil_Order)
+levels(NC$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(NC$Particle_Size) <- levels(train$Particle_Size)
+levels(NC$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(NC$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+levels(NC$Erosion_Class) <- levels(train$Erosion_Class)
+levels(NC$Drainage_Class) <- levels(train$Drainage_Class)
+levels(NC$Hydrologic_Soil_Group) <- levels(train$Hydrologic_Soil_Group)
+
+#Predictions for MS 2016
+NC$Landcover_Current=as.factor(NC$NLCD_2016)
+NC$Landcover_10years_prior=as.factor(NC$NLCD_2006)
+
+levels(NC$Landcover_Current) <- levels(train$Landcover_Current)
+levels(NC$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+NC_pred_2016 <-  predict(forest2, NC)
+NC$SOC_pred_2016=NC_pred_2016
+
+#Predictions for MS 2011
+NC$Landcover_Current=as.factor(NC$NLCD_2011)
+NC$Landcover_10years_prior=as.factor(NC$NLCD_2001)
+
+NC_pred_2011 <-  predict(forest2, NC)
+NC$SOC_pred_2011=NC_pred_2011
+
+#Predictions for MS 2006
+NC$Landcover_Current=as.factor(NC$NLCD_2006)
+NC$Landcover_10years_prior=as.factor(NC$NLCD_1992)
+
+levels(NC$Landcover_Current) <- levels(train$Landcover_Current)
+levels(NC$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+NC_pred_2006 <-  predict(forest2, NC)
+NC$SOC_pred_2006=NC_pred_2006
+
+#Predictions for MS 2001
+NC$Landcover_Current=as.factor(NC$NLCD_2001)
+NC$Landcover_10years_prior=as.factor(NC$NLCD_1992)
+
+levels(NC$Landcover_Current) <- levels(train$Landcover_Current)
+levels(NC$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+NC_pred_2001 <-  predict(forest2, NC)
+NC$SOC_pred_2001=NC_pred_2001
+
+#Exporting file
+write.csv(NC,"Predictions/NC.csv")
+
+NC_pred = NC%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(NC_pred,"Predictions/Just_predictions_and_pointID/NC.csv")
+```
+
+South Carolina
+
+```{r}
+SC <- read_excel("SC_mupoint_250_covar_mod.xlsx", 1)
+SC$Erosion_Class[is.na(SC$Erosion_Class)] <- "Unknown"
+SC$linear_Aspect=-(cos(((SC$Aspect-45))*pi/180))
+
+SC<-SC[complete.cases(SC),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+SC = filter(SC, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+SC$NLCD_2016[SC$NLCD_2016 == "22"] <- "21"
+SC$NLCD_2016[SC$NLCD_2016 == "24"] <- "23"
+
+SC = filter(SC, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+SC$NLCD_2011[SC$NLCD_2011 == "22"] <- "21"
+SC$NLCD_2011[SC$NLCD_2011 == "24"] <- "23"
+
+SC = filter(SC, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+SC$NLCD_2006[SC$NLCD_2006 == "22"] <- "21"
+SC$NLCD_2006[SC$NLCD_2006 == "24"] <- "23"
+
+
+SC = filter(SC, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+SC$NLCD_2001[SC$NLCD_2001 == "22"] <- "21"
+SC$NLCD_2001[SC$NLCD_2001 == "24"] <- "23"
+
+SC = filter(SC, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+SC$NLCD_1992[SC$NLCD_1992 == "85"] <- "21"
+SC$NLCD_1992[SC$NLCD_1992 == "22"] <- "23"
+SC$NLCD_1992[SC$NLCD_1992 == "32"] <- "31"
+SC$NLCD_1992[SC$NLCD_1992 == "33"] <- "31"
+SC$NLCD_1992[SC$NLCD_1992 == "91"] <- "90"
+SC$NLCD_1992[SC$NLCD_1992 == "92"] <- "95"
+SC$NLCD_1992[SC$NLCD_1992 == "51"] <- "52"
+SC$NLCD_1992[SC$NLCD_1992 == "61"] <- "71"
+
+SC$Particle_Size[SC$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+SC$Particle_Size[SC$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+SC$Soil_Order[SC$Soil_Order == "Mollisols"] <- "Alfisols"
+
+SC$Erosion_Class=as.factor(SC$Erosion_Class)
+SC$Drainage_Class=as.factor(SC$Drainage_Class)
+SC$Hydrologic_Soil_Group=as.factor(SC$Hydrologic_Soil_Group)
+SC$Soil_Order=as.factor(SC$Soil_Order)
+SC$Soil_Sub_Order_mod=as.factor(SC$Soil_Sub_Order_mod)
+SC$Particle_Size=as.factor(SC$Particle_Size)
+SC$Soil_Great_Group_mod=as.factor(SC$Soil_Great_Group_mod)
+SC$Soil_Sub_Group_mod=as.factor(SC$Soil_Sub_Group_mod)
+
+levels(SC$Soil_Order) <- levels(train$Soil_Order)
+levels(SC$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(SC$Particle_Size) <- levels(train$Particle_Size)
+levels(SC$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(SC$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+levels(SC$Erosion_Class) <- levels(train$Erosion_Class)
+levels(SC$Drainage_Class) <- levels(train$Drainage_Class)
+levels(SC$Hydrologic_Soil_Group) <- levels(train$Hydrologic_Soil_Group)
+
+#Predictions for MS 2016
+SC$Landcover_Current=as.factor(SC$NLCD_2016)
+SC$Landcover_10years_prior=as.factor(SC$NLCD_2006)
+
+levels(SC$Landcover_Current) <- levels(train$Landcover_Current)
+levels(SC$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+SC_pred_2016 <-  predict(forest2, SC)
+SC$SOC_pred_2016=SC_pred_2016
+
+#Predictions for MS 2011
+SC$Landcover_Current=as.factor(SC$NLCD_2011)
+SC$Landcover_10years_prior=as.factor(SC$NLCD_2001)
+
+SC_pred_2011 <-  predict(forest2, SC)
+SC$SOC_pred_2011=SC_pred_2011
+
+#Predictions for MS 2006
+SC$Landcover_Current=as.factor(SC$NLCD_2006)
+SC$Landcover_10years_prior=as.factor(SC$NLCD_1992)
+
+levels(SC$Landcover_Current) <- levels(train$Landcover_Current)
+levels(SC$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+SC_pred_2006 <-  predict(forest2, SC)
+SC$SOC_pred_2006=SC_pred_2006
+
+#Predictions for MS 2001
+SC$Landcover_Current=as.factor(SC$NLCD_2001)
+SC$Landcover_10years_prior=as.factor(SC$NLCD_1992)
+
+levels(SC$Landcover_Current) <- levels(train$Landcover_Current)
+levels(SC$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+SC_pred_2001 <-  predict(forest2, SC)
+SC$SOC_pred_2001=SC_pred_2001
+
+#Exporting file
+write.csv(SC,"Predictions/SC.csv")
+
+SC_pred = SC%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(SC_pred,"Predictions/Just_predictions_and_pointID/SC.csv")
+```
+
+Tennesse
+
+```{r}
+TN <- read_excel("TN_mupoint_250_covar_mod.xlsx", 1)
+TN$Erosion_Class[is.na(TN$Erosion_Class)] <- "Unknown"
+TN$linear_Aspect=-(cos(((TN$Aspect-45))*pi/180))
+
+TN<-TN[complete.cases(TN),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+TN = filter(TN, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+TN$NLCD_2016[TN$NLCD_2016 == "22"] <- "21"
+TN$NLCD_2016[TN$NLCD_2016 == "24"] <- "23"
+
+TN = filter(TN, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+TN$NLCD_2011[TN$NLCD_2011 == "22"] <- "21"
+TN$NLCD_2011[TN$NLCD_2011 == "24"] <- "23"
+
+TN = filter(TN, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+TN$NLCD_2006[TN$NLCD_2006 == "22"] <- "21"
+TN$NLCD_2006[TN$NLCD_2006 == "24"] <- "23"
+
+
+TN = filter(TN, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+TN$NLCD_2001[TN$NLCD_2001 == "22"] <- "21"
+TN$NLCD_2001[TN$NLCD_2001 == "24"] <- "23"
+
+TN = filter(TN, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+TN$NLCD_1992[TN$NLCD_1992 == "85"] <- "21"
+TN$NLCD_1992[TN$NLCD_1992 == "22"] <- "23"
+TN$NLCD_1992[TN$NLCD_1992 == "32"] <- "31"
+TN$NLCD_1992[TN$NLCD_1992 == "33"] <- "31"
+TN$NLCD_1992[TN$NLCD_1992 == "91"] <- "90"
+TN$NLCD_1992[TN$NLCD_1992 == "92"] <- "95"
+TN$NLCD_1992[TN$NLCD_1992 == "51"] <- "52"
+TN$NLCD_1992[TN$NLCD_1992 == "61"] <- "71"
+
+TN$Particle_Size[TN$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+TN$Particle_Size[TN$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+TN$Soil_Order[TN$Soil_Order == "Mollisols"] <- "Alfisols"
+
+TN$Erosion_Class[TN$Erosion_Class == "Class 4"] <- "Class 3"
+
+TN$Erosion_Class=as.factor(TN$Erosion_Class)
+TN$Drainage_Class=as.factor(TN$Drainage_Class)
+TN$Hydrologic_Soil_Group=as.factor(TN$Hydrologic_Soil_Group)
+TN$Soil_Order=as.factor(TN$Soil_Order)
+TN$Soil_Sub_Order_mod=as.factor(TN$Soil_Sub_Order_mod)
+TN$Particle_Size=as.factor(TN$Particle_Size)
+TN$Soil_Great_Group_mod=as.factor(TN$Soil_Great_Group_mod)
+TN$Soil_Sub_Group_mod=as.factor(TN$Soil_Sub_Group_mod)
+
+levels(TN$Soil_Order) <- levels(train$Soil_Order)
+levels(TN$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(TN$Particle_Size) <- levels(train$Particle_Size)
+levels(TN$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(TN$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+levels(TN$Erosion_Class) <- levels(train$Erosion_Class)
+levels(TN$Drainage_Class) <- levels(train$Drainage_Class)
+levels(TN$Hydrologic_Soil_Group) <- levels(train$Hydrologic_Soil_Group)
+
+#Predictions for MS 2016
+TN$Landcover_Current=as.factor(TN$NLCD_2016)
+TN$Landcover_10years_prior=as.factor(TN$NLCD_2006)
+
+levels(TN$Landcover_Current) <- levels(train$Landcover_Current)
+levels(TN$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+TN_pred_2016 <-  predict(forest2, TN)
+TN$SOC_pred_2016=TN_pred_2016
+
+#Predictions for MS 2011
+TN$Landcover_Current=as.factor(TN$NLCD_2011)
+TN$Landcover_10years_prior=as.factor(TN$NLCD_2001)
+
+TN_pred_2011 <-  predict(forest2, TN)
+TN$SOC_pred_2011=TN_pred_2011
+
+#Predictions for MS 2006
+TN$Landcover_Current=as.factor(TN$NLCD_2006)
+TN$Landcover_10years_prior=as.factor(TN$NLCD_1992)
+
+levels(TN$Landcover_Current) <- levels(train$Landcover_Current)
+levels(TN$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+TN_pred_2006 <-  predict(forest2, TN)
+TN$SOC_pred_2006=TN_pred_2006
+
+#Predictions for MS 2001
+TN$Landcover_Current=as.factor(TN$NLCD_2001)
+TN$Landcover_10years_prior=as.factor(TN$NLCD_1992)
+
+levels(TN$Landcover_Current) <- levels(train$Landcover_Current)
+levels(TN$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+TN_pred_2001 <-  predict(forest2, TN)
+TN$SOC_pred_2001=TN_pred_2001
+
+#Exporting file
+write.csv(TN,"Predictions/TN.csv")
+
+TN_pred = TN%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(TN_pred,"Predictions/Just_predictions_and_pointID/TN.csv")
+```
+
+
+Virginia
+
+```{r}
+VA <- read_excel("VA_mupoint_250_covar_mod.xlsx", 1)
+VA$Erosion_Class[is.na(VA$Erosion_Class)] <- "Unknown"
+VA$linear_Aspect=-(cos(((VA$Aspect-45))*pi/180))
+
+VA<-VA[complete.cases(VA),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+VA = filter(VA, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+VA$NLCD_2016[VA$NLCD_2016 == "22"] <- "21"
+VA$NLCD_2016[VA$NLCD_2016 == "24"] <- "23"
+
+VA = filter(VA, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+VA$NLCD_2011[VA$NLCD_2011 == "22"] <- "21"
+VA$NLCD_2011[VA$NLCD_2011 == "24"] <- "23"
+
+VA = filter(VA, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+VA$NLCD_2006[VA$NLCD_2006 == "22"] <- "21"
+VA$NLCD_2006[VA$NLCD_2006 == "24"] <- "23"
+
+
+VA = filter(VA, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+VA$NLCD_2001[VA$NLCD_2001 == "22"] <- "21"
+VA$NLCD_2001[VA$NLCD_2001 == "24"] <- "23"
+
+VA = filter(VA, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+VA$NLCD_1992[VA$NLCD_1992 == "85"] <- "21"
+VA$NLCD_1992[VA$NLCD_1992 == "22"] <- "23"
+VA$NLCD_1992[VA$NLCD_1992 == "32"] <- "31"
+VA$NLCD_1992[VA$NLCD_1992 == "33"] <- "31"
+VA$NLCD_1992[VA$NLCD_1992 == "91"] <- "90"
+VA$NLCD_1992[VA$NLCD_1992 == "92"] <- "95"
+VA$NLCD_1992[VA$NLCD_1992 == "51"] <- "52"
+VA$NLCD_1992[VA$NLCD_1992 == "61"] <- "71"
+
+VA$Particle_Size[VA$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+VA$Particle_Size[VA$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+VA$Soil_Order[VA$Soil_Order == "Mollisols"] <- "Alfisols"
+
+VA$Erosion_Class[VA$Erosion_Class == "Class 4"] <- "Class 3"
+
+VA$Erosion_Class=as.factor(VA$Erosion_Class)
+VA$Drainage_Class=as.factor(VA$Drainage_Class)
+VA$Hydrologic_Soil_Group=as.factor(VA$Hydrologic_Soil_Group)
+VA$Soil_Order=as.factor(VA$Soil_Order)
+VA$Soil_Sub_Order_mod=as.factor(VA$Soil_Sub_Order_mod)
+VA$Particle_Size=as.factor(VA$Particle_Size)
+VA$Soil_Great_Group_mod=as.factor(VA$Soil_Great_Group_mod)
+VA$Soil_Sub_Group_mod=as.factor(VA$Soil_Sub_Group_mod)
+
+levels(VA$Soil_Order) <- levels(train$Soil_Order)
+levels(VA$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(VA$Particle_Size) <- levels(train$Particle_Size)
+levels(VA$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(VA$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+levels(VA$Erosion_Class) <- levels(train$Erosion_Class)
+levels(VA$Drainage_Class) <- levels(train$Drainage_Class)
+levels(VA$Hydrologic_Soil_Group) <- levels(train$Hydrologic_Soil_Group)
+
+#Predictions for MS 2016
+VA$Landcover_Current=as.factor(VA$NLCD_2016)
+VA$Landcover_10years_prior=as.factor(VA$NLCD_2006)
+
+levels(VA$Landcover_Current) <- levels(train$Landcover_Current)
+levels(VA$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+VA_pred_2016 <-  predict(forest2, VA)
+VA$SOC_pred_2016=VA_pred_2016
+
+#Predictions for MS 2011
+VA$Landcover_Current=as.factor(VA$NLCD_2011)
+VA$Landcover_10years_prior=as.factor(VA$NLCD_2001)
+
+VA_pred_2011 <-  predict(forest2, VA)
+VA$SOC_pred_2011=VA_pred_2011
+
+#Predictions for MS 2006
+VA$Landcover_Current=as.factor(VA$NLCD_2006)
+VA$Landcover_10years_prior=as.factor(VA$NLCD_1992)
+
+levels(VA$Landcover_Current) <- levels(train$Landcover_Current)
+levels(VA$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+VA_pred_2006 <-  predict(forest2, VA)
+VA$SOC_pred_2006=VA_pred_2006
+
+#Predictions for MS 2001
+VA$Landcover_Current=as.factor(VA$NLCD_2001)
+VA$Landcover_10years_prior=as.factor(VA$NLCD_1992)
+
+levels(VA$Landcover_Current) <- levels(train$Landcover_Current)
+levels(VA$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+VA_pred_2001 <-  predict(forest2, VA)
+VA$SOC_pred_2001=VA_pred_2001
+
+#Exporting file
+write.csv(VA,"Predictions/VA.csv")
+
+VA_pred = VA%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(VA_pred,"Predictions/Just_predictions_and_pointID/VA.csv")
+```
+
+Alabama part 1
+
+```{r}
+AL_1 <- read_excel("AL_mupoint_250_covar_1_mod.xlsx", 1)
+AL_1$Erosion_Class[is.na(AL_1$Erosion_Class)] <- "Unknown"
+AL_1$linear_Aspect=-(cos(((AL_1$Aspect-45))*pi/180))
+
+AL_1<-AL_1[complete.cases(AL_1),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+AL_1 = filter(AL_1, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+AL_1$NLCD_2016[AL_1$NLCD_2016 == "22"] <- "21"
+AL_1$NLCD_2016[AL_1$NLCD_2016 == "24"] <- "23"
+
+AL_1 = filter(AL_1, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+AL_1$NLCD_2011[AL_1$NLCD_2011 == "22"] <- "21"
+AL_1$NLCD_2011[AL_1$NLCD_2011 == "24"] <- "23"
+
+AL_1 = filter(AL_1, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+AL_1$NLCD_2006[AL_1$NLCD_2006 == "22"] <- "21"
+AL_1$NLCD_2006[AL_1$NLCD_2006 == "24"] <- "23"
+
+
+AL_1 = filter(AL_1, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+AL_1$NLCD_2001[AL_1$NLCD_2001 == "22"] <- "21"
+AL_1$NLCD_2001[AL_1$NLCD_2001 == "24"] <- "23"
+
+AL_1 = filter(AL_1, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+AL_1$NLCD_1992[AL_1$NLCD_1992 == "85"] <- "21"
+AL_1$NLCD_1992[AL_1$NLCD_1992 == "22"] <- "23"
+AL_1$NLCD_1992[AL_1$NLCD_1992 == "32"] <- "31"
+AL_1$NLCD_1992[AL_1$NLCD_1992 == "33"] <- "31"
+AL_1$NLCD_1992[AL_1$NLCD_1992 == "91"] <- "90"
+AL_1$NLCD_1992[AL_1$NLCD_1992 == "92"] <- "95"
+AL_1$NLCD_1992[AL_1$NLCD_1992 == "51"] <- "52"
+AL_1$NLCD_1992[AL_1$NLCD_1992 == "61"] <- "71"
+
+AL_1$Particle_Size[AL_1$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+AL_1$Particle_Size[AL_1$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+AL_1$Soil_Order=AL_1$taxorder
+
+AL_1$Soil_Order[AL_1$Soil_Order == "Mollisols"] <- "Alfisols"
+
+AL_1$Erosion_Class[AL_1$Erosion_Class == "Class 4"] <- "Class 3"
+
+AL_1$Erosion_Class=as.factor(AL_1$Erosion_Class)
+AL_1$Drainage_Class=as.factor(AL_1$Drainage_Class)
+AL_1$Hydrologic_Soil_Group=as.factor(AL_1$Hydrologic_Soil_Group)
+AL_1$Soil_Order=as.factor(AL_1$Soil_Order)
+AL_1$Soil_Sub_Order_mod=as.factor(AL_1$Soil_Sub_Order_mod)
+AL_1$Particle_Size=as.factor(AL_1$Particle_Size)
+AL_1$Soil_Great_Group_mod=as.factor(AL_1$Soil_Great_Group_mod)
+AL_1$Soil_Sub_Group_mod=as.factor(AL_1$Soil_Sub_Group_mod)
+
+levels(AL_1$Soil_Order) <- levels(train$Soil_Order)
+levels(AL_1$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(AL_1$Particle_Size) <- levels(train$Particle_Size)
+levels(AL_1$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(AL_1$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+levels(AL_1$Erosion_Class) <- levels(train$Erosion_Class)
+levels(AL_1$Drainage_Class) <- levels(train$Drainage_Class)
+levels(AL_1$Hydrologic_Soil_Group) <- levels(train$Hydrologic_Soil_Group)
+
+#Predictions for MS 2016
+AL_1$Landcover_Current=as.factor(AL_1$NLCD_2016)
+AL_1$Landcover_10years_prior=as.factor(AL_1$NLCD_2006)
+
+levels(AL_1$Landcover_Current) <- levels(train$Landcover_Current)
+levels(AL_1$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+AL_1_pred_2016 <-  predict(forest2, AL_1)
+AL_1$SOC_pred_2016=AL_1_pred_2016
+
+#Predictions for MS 2011
+AL_1$Landcover_Current=as.factor(AL_1$NLCD_2011)
+AL_1$Landcover_10years_prior=as.factor(AL_1$NLCD_2001)
+
+AL_1_pred_2011 <-  predict(forest2, AL_1)
+AL_1$SOC_pred_2011=AL_1_pred_2011
+
+#Predictions for MS 2006
+AL_1$Landcover_Current=as.factor(AL_1$NLCD_2006)
+AL_1$Landcover_10years_prior=as.factor(AL_1$NLCD_1992)
+
+levels(AL_1$Landcover_Current) <- levels(train$Landcover_Current)
+levels(AL_1$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+AL_1_pred_2006 <-  predict(forest2, AL_1)
+AL_1$SOC_pred_2006=AL_1_pred_2006
+
+#Predictions for MS 2001
+AL_1$Landcover_Current=as.factor(AL_1$NLCD_2001)
+AL_1$Landcover_10years_prior=as.factor(AL_1$NLCD_1992)
+
+levels(AL_1$Landcover_Current) <- levels(train$Landcover_Current)
+levels(AL_1$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+AL_1_pred_2001 <-  predict(forest2, AL_1)
+AL_1$SOC_pred_2001=AL_1_pred_2001
+
+#Exporting file
+write.csv(AL_1,"Predictions/AL_1.csv")
+
+AL_1_pred = AL_1%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(AL_1_pred,"Predictions/Just_predictions_and_pointID/AL_1.csv")
+```
+
+Alabama part 2
+
+```{r}
+AL_2 <- read_excel("AL_mupoint_250_covar_2_mod.xlsx", 1)
+AL_2$Erosion_Class[is.na(AL_2$Erosion_Class)] <- "Unknown"
+AL_2$linear_Aspect=-(cos(((AL_2$Aspect-45))*pi/180))
+
+AL_2<-AL_2[complete.cases(AL_2),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+AL_2 = filter(AL_2, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+AL_2$NLCD_2016[AL_2$NLCD_2016 == "22"] <- "21"
+AL_2$NLCD_2016[AL_2$NLCD_2016 == "24"] <- "23"
+
+AL_2 = filter(AL_2, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+AL_2$NLCD_2011[AL_2$NLCD_2011 == "22"] <- "21"
+AL_2$NLCD_2011[AL_2$NLCD_2011 == "24"] <- "23"
+
+AL_2 = filter(AL_2, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+AL_2$NLCD_2006[AL_2$NLCD_2006 == "22"] <- "21"
+AL_2$NLCD_2006[AL_2$NLCD_2006 == "24"] <- "23"
+
+
+AL_2 = filter(AL_2, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+AL_2$NLCD_2001[AL_2$NLCD_2001 == "22"] <- "21"
+AL_2$NLCD_2001[AL_2$NLCD_2001 == "24"] <- "23"
+
+AL_2 = filter(AL_2, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+AL_2$NLCD_1992[AL_2$NLCD_1992 == "85"] <- "21"
+AL_2$NLCD_1992[AL_2$NLCD_1992 == "22"] <- "23"
+AL_2$NLCD_1992[AL_2$NLCD_1992 == "32"] <- "31"
+AL_2$NLCD_1992[AL_2$NLCD_1992 == "33"] <- "31"
+AL_2$NLCD_1992[AL_2$NLCD_1992 == "91"] <- "90"
+AL_2$NLCD_1992[AL_2$NLCD_1992 == "92"] <- "95"
+AL_2$NLCD_1992[AL_2$NLCD_1992 == "51"] <- "52"
+AL_2$NLCD_1992[AL_2$NLCD_1992 == "61"] <- "71"
+
+AL_2$Particle_Size[AL_2$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+AL_2$Particle_Size[AL_2$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+AL_2$Soil_Order[AL_2$Soil_Order == "Mollisols"] <- "Alfisols"
+
+AL_2$Erosion_Class[AL_2$Erosion_Class == "Class 4"] <- "Class 3"
+
+AL_2$Erosion_Class=as.factor(AL_2$Erosion_Class)
+AL_2$Drainage_Class=as.factor(AL_2$Drainage_Class)
+AL_2$Hydrologic_Soil_Group=as.factor(AL_2$Hydrologic_Soil_Group)
+AL_2$Soil_Order=as.factor(AL_2$Soil_Order)
+AL_2$Soil_Sub_Order_mod=as.factor(AL_2$Soil_Sub_Order_mod)
+AL_2$Particle_Size=as.factor(AL_2$Particle_Size)
+AL_2$Soil_Great_Group_mod=as.factor(AL_2$Soil_Great_Group_mod)
+AL_2$Soil_Sub_Group_mod=as.factor(AL_2$Soil_Sub_Group_mod)
+
+levels(AL_2$Soil_Order) <- levels(train$Soil_Order)
+levels(AL_2$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(AL_2$Particle_Size) <- levels(train$Particle_Size)
+levels(AL_2$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(AL_2$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+levels(AL_2$Erosion_Class) <- levels(train$Erosion_Class)
+levels(AL_2$Drainage_Class) <- levels(train$Drainage_Class)
+levels(AL_2$Hydrologic_Soil_Group) <- levels(train$Hydrologic_Soil_Group)
+
+#Predictions for MS 2016
+AL_2$Landcover_Current=as.factor(AL_2$NLCD_2016)
+AL_2$Landcover_10years_prior=as.factor(AL_2$NLCD_2006)
+
+levels(AL_2$Landcover_Current) <- levels(train$Landcover_Current)
+levels(AL_2$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+AL_2_pred_2016 <-  predict(forest2, AL_2)
+AL_2$SOC_pred_2016=AL_2_pred_2016
+
+#Predictions for MS 2011
+AL_2$Landcover_Current=as.factor(AL_2$NLCD_2011)
+AL_2$Landcover_10years_prior=as.factor(AL_2$NLCD_2001)
+
+AL_2_pred_2011 <-  predict(forest2, AL_2)
+AL_2$SOC_pred_2011=AL_2_pred_2011
+
+#Predictions for MS 2006
+AL_2$Landcover_Current=as.factor(AL_2$NLCD_2006)
+AL_2$Landcover_10years_prior=as.factor(AL_2$NLCD_1992)
+
+levels(AL_2$Landcover_Current) <- levels(train$Landcover_Current)
+levels(AL_2$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+AL_2_pred_2006 <-  predict(forest2, AL_2)
+AL_2$SOC_pred_2006=AL_2_pred_2006
+
+#Predictions for MS 2001
+AL_2$Landcover_Current=as.factor(AL_2$NLCD_2001)
+AL_2$Landcover_10years_prior=as.factor(AL_2$NLCD_1992)
+
+levels(AL_2$Landcover_Current) <- levels(train$Landcover_Current)
+levels(AL_2$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+AL_2_pred_2001 <-  predict(forest2, AL_2)
+AL_2$SOC_pred_2001=AL_2_pred_2001
+
+#Exporting file
+write.csv(AL_2,"Predictions/AL_2.csv")
+
+AL_2_pred = AL_2%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(AL_2_pred,"Predictions/Just_predictions_and_pointID/AL_2.csv")
+```
+
+Alabama part 3
+
+```{r}
+AL_3 <- read_excel("AL_mupoint_250_covar_3_mod.xlsx", 1)
+AL_3$Erosion_Class[is.na(AL_3$Erosion_Class)] <- "Unknown"
+AL_3$linear_Aspect=-(cos(((AL_3$Aspect-45))*pi/180))
+
+AL_3<-AL_3[complete.cases(AL_3),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+AL_3 = filter(AL_3, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+AL_3$NLCD_2016[AL_3$NLCD_2016 == "22"] <- "21"
+AL_3$NLCD_2016[AL_3$NLCD_2016 == "24"] <- "23"
+
+AL_3 = filter(AL_3, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+AL_3$NLCD_2011[AL_3$NLCD_2011 == "22"] <- "21"
+AL_3$NLCD_2011[AL_3$NLCD_2011 == "24"] <- "23"
+
+AL_3 = filter(AL_3, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+AL_3$NLCD_2006[AL_3$NLCD_2006 == "22"] <- "21"
+AL_3$NLCD_2006[AL_3$NLCD_2006 == "24"] <- "23"
+
+
+AL_3 = filter(AL_3, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+AL_3$NLCD_2001[AL_3$NLCD_2001 == "22"] <- "21"
+AL_3$NLCD_2001[AL_3$NLCD_2001 == "24"] <- "23"
+
+AL_3 = filter(AL_3, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+AL_3$NLCD_1992[AL_3$NLCD_1992 == "85"] <- "21"
+AL_3$NLCD_1992[AL_3$NLCD_1992 == "22"] <- "23"
+AL_3$NLCD_1992[AL_3$NLCD_1992 == "32"] <- "31"
+AL_3$NLCD_1992[AL_3$NLCD_1992 == "33"] <- "31"
+AL_3$NLCD_1992[AL_3$NLCD_1992 == "91"] <- "90"
+AL_3$NLCD_1992[AL_3$NLCD_1992 == "92"] <- "95"
+AL_3$NLCD_1992[AL_3$NLCD_1992 == "51"] <- "52"
+AL_3$NLCD_1992[AL_3$NLCD_1992 == "61"] <- "71"
+
+AL_3$Particle_Size[AL_3$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+AL_3$Particle_Size[AL_3$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+AL_3$Soil_Order[AL_3$Soil_Order == "Mollisols"] <- "Alfisols"
+
+AL_3$Erosion_Class[AL_3$Erosion_Class == "Class 4"] <- "Class 3"
+
+AL_3$Erosion_Class=as.factor(AL_3$Erosion_Class)
+AL_3$Drainage_Class=as.factor(AL_3$Drainage_Class)
+AL_3$Hydrologic_Soil_Group=as.factor(AL_3$Hydrologic_Soil_Group)
+AL_3$Soil_Order=as.factor(AL_3$Soil_Order)
+AL_3$Soil_Sub_Order_mod=as.factor(AL_3$Soil_Sub_Order_mod)
+AL_3$Particle_Size=as.factor(AL_3$Particle_Size)
+AL_3$Soil_Great_Group_mod=as.factor(AL_3$Soil_Great_Group_mod)
+AL_3$Soil_Sub_Group_mod=as.factor(AL_3$Soil_Sub_Group_mod)
+
+levels(AL_3$Soil_Order) <- levels(train$Soil_Order)
+levels(AL_3$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(AL_3$Particle_Size) <- levels(train$Particle_Size)
+levels(AL_3$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+levels(AL_3$Soil_Sub_Order_mod) <- levels(train$Soil_Sub_Order_mod)
+levels(AL_3$Erosion_Class) <- levels(train$Erosion_Class)
+levels(AL_3$Drainage_Class) <- levels(train$Drainage_Class)
+levels(AL_3$Hydrologic_Soil_Group) <- levels(train$Hydrologic_Soil_Group)
+
+#Predictions for MS 2016
+AL_3$Landcover_Current=as.factor(AL_3$NLCD_2016)
+AL_3$Landcover_10years_prior=as.factor(AL_3$NLCD_2006)
+
+levels(AL_3$Landcover_Current) <- levels(train$Landcover_Current)
+levels(AL_3$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+AL_3_pred_2016 <-  predict(forest2, AL_3)
+AL_3$SOC_pred_2016=AL_3_pred_2016
+
+#Predictions for MS 2011
+AL_3$Landcover_Current=as.factor(AL_3$NLCD_2011)
+AL_3$Landcover_10years_prior=as.factor(AL_3$NLCD_2001)
+
+AL_3_pred_2011 <-  predict(forest2, AL_3)
+AL_3$SOC_pred_2011=AL_3_pred_2011
+
+#Predictions for MS 2006
+AL_3$Landcover_Current=as.factor(AL_3$NLCD_2006)
+AL_3$Landcover_10years_prior=as.factor(AL_3$NLCD_1992)
+
+levels(AL_3$Landcover_Current) <- levels(train$Landcover_Current)
+levels(AL_3$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+AL_3_pred_2006 <-  predict(forest2, AL_3)
+AL_3$SOC_pred_2006=AL_3_pred_2006
+
+#Predictions for MS 2001
+AL_3$Landcover_Current=as.factor(AL_3$NLCD_2001)
+AL_3$Landcover_10years_prior=as.factor(AL_3$NLCD_1992)
+
+levels(AL_3$Landcover_Current) <- levels(train$Landcover_Current)
+levels(AL_3$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+AL_3_pred_2001 <-  predict(forest2, AL_3)
+AL_3$SOC_pred_2001=AL_3_pred_2001
+
+#Exporting file
+write.csv(AL_3,"Predictions/AL_3.csv")
+
+AL_3_pred = AL_3%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(AL_3_pred,"Predictions/Just_predictions_and_pointID/AL_3.csv")
+```
+
+```{r}
+#Georgia Part 1
+GA_1 <- read_excel("E:/GIS/DSP_Scale_Model/Nov_13th_2022/R_files/DSP_Scale_predictions/GA_covariables_250m_1_mod.xlsx", 1)
+GA_1$Erosion_Class[is.na(GA_1$Erosion_Class)] <- "Unknown"
+GA_1$linear_Aspect=-(cos(((GA_1$Aspect-45))*pi/180))
+
+GA_1<-GA_1[complete.cases(GA_1),]
+
+#Predict for 2016 in AL
+#Setting Current and past ten year land cover
+library(dplyr)
+GA_1 = filter(GA_1, NLCD_2016 != "11" & NLCD_2016 != "-9999")
+GA_1$NLCD_2016[GA_1$NLCD_2016 == "22"] <- "21"
+GA_1$NLCD_2016[GA_1$NLCD_2016 == "24"] <- "23"
+
+GA_1 = filter(GA_1, NLCD_2011 != "11" & NLCD_2011 != "-9999")
+GA_1$NLCD_2011[GA_1$NLCD_2011 == "22"] <- "21"
+GA_1$NLCD_2011[GA_1$NLCD_2011 == "24"] <- "23"
+
+GA_1 = filter(GA_1, NLCD_2006 != "11" & NLCD_2006 != "-9999")
+GA_1$NLCD_2006[GA_1$NLCD_2006 == "22"] <- "21"
+GA_1$NLCD_2006[GA_1$NLCD_2006 == "24"] <- "23"
+
+
+GA_1 = filter(GA_1, NLCD_2001 != "11" & NLCD_2001 != "-9999")
+GA_1$NLCD_2001[GA_1$NLCD_2001 == "22"] <- "21"
+GA_1$NLCD_2001[GA_1$NLCD_2001 == "24"] <- "23"
+
+GA_1 = filter(GA_1, NLCD_1992 != "11" & NLCD_1992 != "-9999")
+GA_1$NLCD_1992[GA_1$NLCD_1992 == "85"] <- "21"
+GA_1$NLCD_1992[GA_1$NLCD_1992 == "22"] <- "23"
+GA_1$NLCD_1992[GA_1$NLCD_1992 == "32"] <- "31"
+GA_1$NLCD_1992[GA_1$NLCD_1992 == "33"] <- "31"
+GA_1$NLCD_1992[GA_1$NLCD_1992 == "91"] <- "90"
+GA_1$NLCD_1992[GA_1$NLCD_1992 == "92"] <- "95"
+
+GA_1$Particle_Size[GA_1$Particle_Size == "fine-loamy over sandy or sandy-skeletal"] = "fine-loamy"
+GA_1$Particle_Size[GA_1$Particle_Size == "sandy or sandy-skeletal"] = "sandy"
+
+GA_1 <- na.omit(GA_1) 
+GA_1<-GA_1[complete.cases(GA_1),]
+
+GA_1$Landcover_Current=as.factor(GA_1$NLCD_2016)
+GA_1$Landcover_10years_prior=as.factor(GA_1$NLCD_2006)
+
+GA_1$Landcover_Current=as.factor(GA_1$Landcover_Current)
+GA_1$Landcover_10years_prior=as.factor(GA_1$Landcover_10years_prior)
+
+GA_1$Erosion_Class=as.factor(GA_1$Erosion_Class)
+GA_1$Drainage_Class=as.factor(GA_1$Drainage_Class)
+GA_1$Hydrologic_Soil_Group=as.factor(GA_1$Hydrologic_Soil_Group)
+GA_1$Soil_Order=as.factor(GA_1$Soil_Order)
+GA_1$Soil_Sub_Order_mod=as.factor(GA_1$Soil_Sub_Order_mod)
+GA_1$Particle_Size=as.factor(GA_1$Particle_Size)
+GA_1$Soil_Great_Group_mod=as.factor(GA_1$Soil_Great_Group_mod)
+GA_1$Soil_Sub_Group_mod=as.factor(GA_1$Soil_Sub_Group_mod)
+
+levels(GA_1$Soil_Order) <- levels(train$Soil_Order)
+levels(GA_1$Soil_Great_Group_mod) <- levels(train$Soil_Great_Group_mod)
+levels(GA_1$Particle_Size) <- levels(train$Particle_Size)
+levels(GA_1$Soil_Sub_Group_mod) <- levels(train$Soil_Sub_Group_mod)
+
+#Predictions for GA 2016
+GA_1_pred_2016 <-  predict(forest2, GA_1)
+GA_1$SOC_pred_2016=GA_1_pred_2016
+
+#Predictions for GA 2011
+GA_1$Landcover_Current=as.factor(GA_1$NLCD_2011)
+GA_1$Landcover_10years_prior=as.factor(GA_1$NLCD_2001)
+
+GA_1_pred_2011 <-  predict(forest2, GA_1)
+GA_1$SOC_pred_2011=GA_1_pred_2011
+
+#Predictions for GA 2006
+GA_1$Landcover_Current=as.factor(GA_1$NLCD_2006)
+GA_1$Landcover_10years_prior=as.factor(GA_1$NLCD_1992)
+
+levels(GA_1$Landcover_Current) <- levels(train$Landcover_Current)
+levels(GA_1$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+GA_1_pred_2006 <-  predict(forest2, GA_1)
+GA_1$SOC_pred_2006=GA_1_pred_2006
+
+#Predictions for GA 2001
+GA_1$Landcover_Current=as.factor(GA_1$NLCD_2001)
+GA_1$Landcover_10years_prior=as.factor(GA_1$NLCD_1992)
+
+levels(GA_1$Landcover_Current) <- levels(train$Landcover_Current)
+levels(GA_1$Landcover_10years_prior) <- levels(train$Landcover_10years_prior)
+
+GA_1_pred_2001 <-  predict(forest2, GA_1)
+GA_1$SOC_pred_2001=GA_1_pred_2001
+
+#Exporting file
+write.csv(GA_1,"Predictions/GA_1.csv")
+
+GA_1_pred = GA_1%>%
+  select(pointid, SOC_pred_2016, SOC_pred_2011, SOC_pred_2006, SOC_pred_2001 )
+
+write.csv(GA_1_pred,"Predictions/Just_predictions_and_pointID/GA_1.csv")
+```
+
+```{r}
+library(tidyverse)
+AL_1_2016_Land_Cover_table=AL_1%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+AL_1_2011_Land_Cover_table=AL_1%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+AL_1_2006_Land_Cover_table=AL_1%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+AL_1_2001_Land_Cover_table=AL_1%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+AL_1_Land_Cover_table_1=full_join(AL_1_2016_Land_Cover_table, AL_1_2011_Land_Cover_table, by = "NLCD")
+
+AL_1_Land_Cover_table_2=full_join(AL_1_2006_Land_Cover_table, AL_1_2001_Land_Cover_table, by = "NLCD")
+
+AL_1_Land_Cover_table=full_join(AL_1_Land_Cover_table_1, AL_1_Land_Cover_table_2, by = "NLCD")
+```
+
+```{r}
+AL_2_2016_Land_Cover_table=AL_2%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+AL_2_2011_Land_Cover_table=AL_2%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+AL_2_2006_Land_Cover_table=AL_2%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+AL_2_2001_Land_Cover_table=AL_2%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+AL_2_Land_Cover_table_1=full_join(AL_2_2016_Land_Cover_table, AL_2_2011_Land_Cover_table, by = "NLCD")
+
+AL_2_Land_Cover_table_2=full_join(AL_2_2006_Land_Cover_table, AL_2_2001_Land_Cover_table, by = "NLCD")
+
+AL_2_Land_Cover_table=full_join(AL_2_Land_Cover_table_1, AL_2_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+AL_3_2016_Land_Cover_table=AL_3%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+AL_3_2011_Land_Cover_table=AL_3%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+AL_3_2006_Land_Cover_table=AL_3%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+AL_3_2001_Land_Cover_table=AL_3%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+AL_3_Land_Cover_table_1=full_join(AL_3_2016_Land_Cover_table, AL_3_2011_Land_Cover_table, by = "NLCD")
+
+AL_3_Land_Cover_table_2=full_join(AL_3_2006_Land_Cover_table, AL_3_2001_Land_Cover_table, by = "NLCD")
+
+AL_3_Land_Cover_table=full_join(AL_3_Land_Cover_table_1, AL_3_Land_Cover_table_2, by = "NLCD")
+```
+
+```{r}
+FL_2016_Land_Cover_table=FL%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+FL_2011_Land_Cover_table=FL%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+FL_2006_Land_Cover_table=FL%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+FL_2001_Land_Cover_table=FL%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+FL_Land_Cover_table_1=full_join(FL_2016_Land_Cover_table, FL_2011_Land_Cover_table, by = "NLCD")
+
+FL_Land_Cover_table_2=full_join(FL_2006_Land_Cover_table, FL_2001_Land_Cover_table, by = "NLCD")
+
+FL_Land_Cover_table=full_join(FL_Land_Cover_table_1, FL_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+LA_2016_Land_Cover_table=LA%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+LA_2011_Land_Cover_table=LA%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+LA_2006_Land_Cover_table=LA%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+LA_2001_Land_Cover_table=LA%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+LA_Land_Cover_table_1=full_join(LA_2016_Land_Cover_table, LA_2011_Land_Cover_table, by = "NLCD")
+
+LA_Land_Cover_table_2=full_join(LA_2006_Land_Cover_table, LA_2001_Land_Cover_table, by = "NLCD")
+
+LA_Land_Cover_table=full_join(LA_Land_Cover_table_1, LA_Land_Cover_table_2, by = "NLCD")
+```
+
+```{r}
+MS_1_2016_Land_Cover_table=MS_1%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+MS_1_2011_Land_Cover_table=MS_1%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+MS_1_2006_Land_Cover_table=MS_1%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+MS_1_2001_Land_Cover_table=MS_1%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+MS_1_Land_Cover_table_1=full_join(MS_1_2016_Land_Cover_table, MS_1_2011_Land_Cover_table, by = "NLCD")
+
+MS_1_Land_Cover_table_2=full_join(MS_1_2006_Land_Cover_table, MS_1_2001_Land_Cover_table, by = "NLCD")
+
+MS_1_Land_Cover_table=full_join(MS_1_Land_Cover_table_1, MS_1_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+MS_2_2016_Land_Cover_table=MS_2%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+MS_2_2011_Land_Cover_table=MS_2%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+MS_2_2006_Land_Cover_table=MS_2%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+MS_2_2001_Land_Cover_table=MS_2%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+MS_2_Land_Cover_table_1=full_join(MS_2_2016_Land_Cover_table, MS_2_2011_Land_Cover_table, by = "NLCD")
+
+MS_2_Land_Cover_table_2=full_join(MS_2_2006_Land_Cover_table, MS_2_2001_Land_Cover_table, by = "NLCD")
+
+MS_2_Land_Cover_table=full_join(MS_2_Land_Cover_table_1, MS_2_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+MS_3_2016_Land_Cover_table=MS_3%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+MS_3_2011_Land_Cover_table=MS_3%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+MS_3_2006_Land_Cover_table=MS_3%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+MS_3_2001_Land_Cover_table=MS_3%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+MS_3_Land_Cover_table_1=full_join(MS_3_2016_Land_Cover_table, MS_3_2011_Land_Cover_table, by = "NLCD")
+
+MS_3_Land_Cover_table_2=full_join(MS_3_2006_Land_Cover_table, MS_3_2001_Land_Cover_table, by = "NLCD")
+
+MS_3_Land_Cover_table=full_join(MS_3_Land_Cover_table_1, MS_3_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+NC_2016_Land_Cover_table=NC%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+NC_2011_Land_Cover_table=NC%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+NC_2006_Land_Cover_table=NC%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+NC_2001_Land_Cover_table=NC%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+NC_Land_Cover_table_1=full_join(NC_2016_Land_Cover_table, NC_2011_Land_Cover_table, by = "NLCD")
+
+NC_Land_Cover_table_2=full_join(NC_2006_Land_Cover_table, NC_2001_Land_Cover_table, by = "NLCD")
+
+NC_Land_Cover_table=full_join(NC_Land_Cover_table_1, NC_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+SC_2016_Land_Cover_table=SC%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+SC_2011_Land_Cover_table=SC%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+SC_2006_Land_Cover_table=SC%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+SC_2001_Land_Cover_table=SC%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+SC_Land_Cover_table_1=full_join(SC_2016_Land_Cover_table, SC_2011_Land_Cover_table, by = "NLCD")
+
+SC_Land_Cover_table_2=full_join(SC_2006_Land_Cover_table, SC_2001_Land_Cover_table, by = "NLCD")
+
+SC_Land_Cover_table=full_join(SC_Land_Cover_table_1, SC_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+TN_2016_Land_Cover_table=TN%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+TN_2011_Land_Cover_table=TN%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+TN_2006_Land_Cover_table=TN%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+TN_2001_Land_Cover_table=TN%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+TN_Land_Cover_table_1=full_join(TN_2016_Land_Cover_table, TN_2011_Land_Cover_table, by = "NLCD")
+
+TN_Land_Cover_table_2=full_join(TN_2006_Land_Cover_table, TN_2001_Land_Cover_table, by = "NLCD")
+
+TN_Land_Cover_table=full_join(TN_Land_Cover_table_1, TN_Land_Cover_table_2, by = "NLCD")
+```
+```{r}
+VA_2016_Land_Cover_table=VA%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016), pixels_2016=n())%>%
+  mutate(NLCD=NLCD_2016)
+
+VA_2011_Land_Cover_table=VA%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011), pixels_2011=n())%>%
+  mutate(NLCD=NLCD_2011)
+
+VA_2006_Land_Cover_table=VA%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006), pixels_2006=n())%>%
+  mutate(NLCD=NLCD_2006)
+
+VA_2001_Land_Cover_table=VA%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001), pixels_2001=n())%>%
+  mutate(NLCD=NLCD_2001)
+
+VA_Land_Cover_table_1=full_join(VA_2016_Land_Cover_table, VA_2011_Land_Cover_table, by = "NLCD")
+
+VA_Land_Cover_table_2=full_join(VA_2006_Land_Cover_table, VA_2001_Land_Cover_table, by = "NLCD")
+
+VA_Land_Cover_table=full_join(VA_Land_Cover_table_1, VA_Land_Cover_table_2, by = "NLCD")
+```

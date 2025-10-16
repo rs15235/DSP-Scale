@@ -1,0 +1,557 @@
+---
+title: "Plot_Taxsuborder"
+author: "Rajneesh Sharma"
+date: "7/27/2023"
+output: html_document
+---
+
+```{r}
+library(readr)
+library(tidyverse)
+
+AL_Covar_1 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/AL_1_SOC_pred.csv")
+AL_Covar_2 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/AL_2_SOC_pred.csv")
+GA_Covar_1 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/GA_1_SOC_pred.csv")
+GA_Covar_2 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/GA_2_SOC_pred.csv")
+MS_Covar_1 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MS_1_SOC_pred.csv")
+MS_Covar_2 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MS_2_SOC_pred.csv")
+FL_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/FL_SOC_pred.csv")
+LA_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/LA_SOC_pred.csv")
+NC_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/NC_SOC_pred.csv")
+SC_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/SC_SOC_pred.csv")
+TN_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/TN_SOC_pred.csv")
+VA_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/VA_SOC_pred.csv")
+
+```
+```{r}
+# library
+library(ggplot2)
+library(viridis)
+#library(hrbrthemes)
+library(tidyverse)
+
+AL_1_order_LC_SOC =AL_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+AL_2_order_LC_SOC =AL_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+GA_1_order_LC_SOC =GA_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+GA_2_order_LC_SOC =GA_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MS_1_order_LC_SOC =MS_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MS_2_order_LC_SOC =MS_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+FL_order_LC_SOC =FL_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+LA_order_LC_SOC =LA_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+NC_order_LC_SOC =NC_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+ 
+SC_order_LC_SOC =SC_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+TN_order_LC_SOC =TN_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+VA_order_LC_SOC =VA_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MLRA_order_LC_SOC_2001 <- rbind(VA_order_LC_SOC, TN_order_LC_SOC, NC_order_LC_SOC, SC_order_LC_SOC, LA_order_LC_SOC, FL_order_LC_SOC, MS_1_order_LC_SOC, MS_2_order_LC_SOC, GA_1_order_LC_SOC, GA_2_order_LC_SOC, AL_1_order_LC_SOC, AL_2_order_LC_SOC)
+
+MLRA_order_LC_SOC_2001 =MLRA_order_LC_SOC_2001%>%
+  group_by(taxsuborder, NLCD_2001)%>%
+  filter(taxsuborder %in% c("Aqualfs","Aquents","Aquepts","Aquults","Fluvents","Ochrepts","Psamments","Udalfs","Udepts","Udults", "Aquods","Orthents","Orthods","Humods","Uderts","Aquerts","Saprists","Umbrepts"))%>%
+  filter(NLCD_2001 %in% c("31", "41", "42", "43", "52","71", "81", "82", "90", "95"))%>%
+  summarise(total_stock_2001=sum(total_stock_2001), SOC20_2001=mean(SOC20_2001), pixels_2001=sum(pixels_2001))
+
+#MLRA_order_LC_SOC_2001$NLCD_2001 = as.factor(MLRA_order_LC_SOC_2001$NLCD_2001)
+#MLRA_order_LC_SOC_2001$NLCD_2001 <- factor(MLRA_order_LC_SOC_2001$NLCD_2001, levels = c("31", "41", "42", "43", "52","71", "81", "82", "90", "95"))
+
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '31'] <- 'Barren Land'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '41'] <- 'Deciduous Forest'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '42'] <- 'Evergreen Forest'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '43'] <- 'Mixed Forest'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '52'] <- 'Shrub/Scrub'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '71'] <- 'Grassland/Herbaceous'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '81'] <- 'Pasture/Hay'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '82'] <- 'Cultivated Crops'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '90'] <- 'Woody Wetlands'
+MLRA_order_LC_SOC_2001$NLCD_2001[MLRA_order_LC_SOC_2001$NLCD_2001 == '95'] <- 'Emergent Herbaceous Wetlands'
+
+MLRA_order_LC_SOC_2001$taxsuborder <- factor(MLRA_order_LC_SOC_2001$taxsuborder, levels = c("Aqualfs", "Udalfs", "Aquents", "Fluvents", "Orthents", "Psamments", "Saprists", "Aquepts", "Ochrepts", "Udepts", "Umbrepts", "Aquods", "Humods", "Orthods", "Aquults", "Udults", "Aquerts", "Uderts"))
+
+MLRA_order_LC_SOC_2001$NLCD_2001 <- factor(MLRA_order_LC_SOC_2001$NLCD_2001, levels = c("Barren Land", "Deciduous Forest", "Evergreen Forest", "Mixed Forest", "Shrub/Scrub","Grassland/Herbaceous", "Pasture/Hay", "Cultivated Crops", "Woody Wetlands", "Emergent Herbaceous Wetlands"))
+
+
+library(hrbrthemes)
+
+
+# Small multiple
+Plot_1 = ggplot(MLRA_order_LC_SOC_2001, aes(fill=NLCD_2001, y=total_stock_2001, x=taxsuborder)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(fill = NULL)+
+     scale_fill_manual(values=c("#B2ADA3", "#68AA63", "#1C6330", "#B5C98E", "#CCBA7C", "#E2E2C1", "#DBD83D", "#AA7028", "#BAD8EA", "#70A3BA" )) +
+    theme_ipsum() +
+    xlab("")+
+    ylab("Total SOC Stock (Tg) in 2001")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.1, hjust=0.5, colour = ))
+
+Plot_1
+
+#Plot_2 = ggplot(MLRA_order_LC_SOC_2001, aes(fill=NLCD_2001, y=SOC20_2001, x=taxsuborder)) + 
+#         geom_bar(position="stack", stat="identity") +
+#        labs(fill = NULL)+
+#          scale_fill_manual(values=c("#B2ADA3", "#68AA63", "#1C6330", "#B5C98E", "#CCBA7C", "#E2E2C1", "#DBD83D", "#AA7028", "#BAD8EA", "#70A3BA")) +
+#         theme_ipsum() +
+#         xlab("")+
+#  ylab("SOC20 (Mg/ha) in 2001")+
+#  theme(axis.text.x = element_text(angle = 90, vjust = 0.1, hjust=0.5))
+#Plot_2
+
+############################################################################################################################################################################
+
+Plot_2 = ggplot(MLRA_order_LC_SOC_2001, aes(taxsuborder, SOC20_2001))+
+  geom_jitter(aes(colour = NLCD_2001), width = 0.2, size = 2)+
+        labs(fill = NULL)+
+          scale_color_manual(values=c("#B2ADA3", "#68AA63", "#1C6330", "#B5C98E", "#CCBA7C", "#E2E2C1", "#DBD83D", "#AA7028", "#BAD8EA", "#70A3BA")) +
+         theme_ipsum() +
+         xlab("")+
+  ylim(0, 250)+
+  ylab("SOC20 (Mg/ha) in 2001")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.1, hjust=0.5))
+Plot_2
+
+
+```
+Creating Plot 2
+```{r}
+# library
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+
+AL_1_order_LC_SOC =AL_Covar_1%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+AL_2_order_LC_SOC =AL_Covar_2%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+GA_1_order_LC_SOC =GA_Covar_1%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+GA_2_order_LC_SOC =GA_Covar_2%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+MS_1_order_LC_SOC =MS_Covar_1%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+MS_2_order_LC_SOC =MS_Covar_2%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+FL_order_LC_SOC =FL_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+LA_order_LC_SOC =LA_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+NC_order_LC_SOC =NC_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+ 
+SC_order_LC_SOC =SC_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+TN_order_LC_SOC =TN_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+VA_order_LC_SOC =VA_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+MLRA_order_LC_SOC_2019 <- rbind(VA_order_LC_SOC, TN_order_LC_SOC, NC_order_LC_SOC, SC_order_LC_SOC, LA_order_LC_SOC, FL_order_LC_SOC, MS_1_order_LC_SOC, MS_2_order_LC_SOC, GA_1_order_LC_SOC, GA_2_order_LC_SOC, AL_1_order_LC_SOC, AL_2_order_LC_SOC)
+
+MLRA_order_LC_SOC_2019 =MLRA_order_LC_SOC_2019%>%
+  group_by(taxsuborder, NLCD_2019)%>%
+  filter(taxsuborder %in% c("Aqualfs","Aquents","Aquepts","Aquults","Fluvents","Ochrepts","Psamments","Udalfs","Udepts","Udults", "Aquods","Orthents","Orthods","Humods","Uderts","Aquerts","Saprists","Umbrepts"))%>%
+  filter(NLCD_2019 %in% c("31", "41", "42", "43", "52","71", "81", "82", "90", "95"))%>%
+  summarise(total_stock_2019=sum(total_stock_2019), SOC20_2019=mean(SOC20_2019), pixels_2019=sum(pixels_2019))
+
+
+#MLRA_order_LC_SOC_2019$NLCD_2019=as.factor(MLRA_order_LC_SOC_2019$NLCD_2019)
+
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '31'] <- 'Barren Land'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '41'] <- 'Deciduous Forest'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '42'] <- 'Evergreen Forest'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '43'] <- 'Mixed Forest'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '52'] <- 'Shrub/Scrub'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '71'] <- 'Grassland/Herbaceous'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '81'] <- 'Pasture/Hay'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '82'] <- 'Cultivated Crops'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '90'] <- 'Woody Wetlands'
+MLRA_order_LC_SOC_2019$NLCD_2019[MLRA_order_LC_SOC_2019$NLCD_2019 == '95'] <- 'Emergent Herbaceous Wetlands'
+
+MLRA_order_LC_SOC_2019$taxsuborder <- factor(MLRA_order_LC_SOC_2019$taxsuborder, levels = c("Aqualfs", "Udalfs", "Aquents", "Fluvents", "Orthents", "Psamments", "Saprists", "Aquepts", "Ochrepts", "Udepts", "Umbrepts", "Aquods", "Humods", "Orthods", "Aquults", "Udults", "Aquerts", "Uderts"))
+
+MLRA_order_LC_SOC_2019$NLCD_2019 <- factor(MLRA_order_LC_SOC_2019$NLCD_2019, levels = c("Barren Land", "Deciduous Forest", "Evergreen Forest", "Mixed Forest", "Shrub/Scrub","Grassland/Herbaceous", "Pasture/Hay", "Cultivated Crops", "Woody Wetlands", "Emergent Herbaceous Wetlands"))
+
+MLRA_order_LC_SOC_2019$pixels_2019 = as.numeric(MLRA_order_LC_SOC_2019$pixels_2019)
+MLRA_order_LC_SOC_2019[nrow(MLRA_order_LC_SOC_2019) +1,] = list("Umbrepts", "Emergent Herbaceous Wetlands", 0, 0, 0)
+MLRA_order_LC_SOC_2019[nrow(MLRA_order_LC_SOC_2019) +1,] = list("Humods", "Deciduous Forest", 0, 0, 0)
+MLRA_order_LC_SOC_2019[nrow(MLRA_order_LC_SOC_2019) +1,] = list("Humods", "Pasture/Hay", 0, 0, 0)
+MLRA_order_LC_SOC_2019[nrow(MLRA_order_LC_SOC_2019) +1,] = list("Saprists", "Deciduous Forest", 0, 0, 0)
+
+# Small multiple
+Plot_3 = ggplot(MLRA_order_LC_SOC_2019, aes(fill=NLCD_2019, y=total_stock_2019, x=taxsuborder)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(fill = NULL)+
+      scale_fill_manual(values=c("#B2ADA3", "#68AA63", "#1C6330", "#B5C98E", "#CCBA7C", "#E2E2C1", "#DBD83D", "#AA7028", "#BAD8EA", "#70A3BA")) +
+    theme_ipsum() +
+    xlab("")+
+  ylab("Total SOC Stock (Tg) in 2019")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.1, hjust=0.5))
+
+Plot_3
+
+#Plot_4 = ggplot(MLRA_order_LC_SOC_2019, aes(fill=NLCD_2019, y=SOC20_2019, x=taxsuborder)) + 
+#    geom_bar(position="stack", stat="identity") +
+#    labs(fill = NULL)+
+#     scale_fill_manual(values=c("#B2ADA3", "#68AA63", "#1C6330", "#B5C98E", "#CCBA7C", "#E2E2C1", "#DBD83D", "#AA7028", "#BAD8EA", "#70A3BA")) +
+#    theme_ipsum() +
+#    xlab("")+
+#  ylab("SOC20 (Mg/ha) in 2019")+
+#  theme(axis.text.x = element_text(angle = 90, vjust = 0.1, hjust=0.5))
+
+#Plot_4
+
+Plot_4 = ggplot(MLRA_order_LC_SOC_2019, aes(taxsuborder, SOC20_2019))+
+  geom_jitter(aes(colour = NLCD_2019), width = 0.2, size = 2)+
+        labs(fill = NULL)+
+          scale_color_manual(values=c("#B2ADA3", "#68AA63", "#1C6330", "#B5C98E", "#CCBA7C", "#E2E2C1", "#DBD83D", "#AA7028", "#BAD8EA", "#70A3BA")) +
+         theme_ipsum() +
+         xlab("")+
+  ylab("SOC20 (Mg/ha) in 2019")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.1, hjust=0.5))
+Plot_4
+
+```
+
+Plot 5 and 6
+```{r}
+library(writexl)
+write_xlsx(MLRA_order_LC_SOC_2001, "C:/Users/rs15235/OneDrive - University of Georgia/Manuscripts/DSP-Scale Model/MLRA_sub_order_LC_SOC_2001.xlsx")
+
+write_xlsx(MLRA_order_LC_SOC_2019, "C:/Users/rs15235/OneDrive - University of Georgia/Manuscripts/DSP-Scale Model/MLRA_sub_order_LC_SOC_2019.xlsx")
+
+library(readxl)
+MLRA_sub_order_LC_SOC_2001_2019 <- read_excel("C:/Users/rs15235/OneDrive - University of Georgia/Manuscripts/DSP-Scale Model/MLRA_sub_order_LC_SOC_2001_2019.xlsx")
+
+MLRA_order_LC_SOC_2001_2019=MLRA_sub_order_LC_SOC_2001_2019%>%
+  mutate(total_stock_change = total_stock_2019 - total_stock_2001)%>%
+  mutate(SOC_20_change = SOC20_2019 - SOC20_2001)%>%
+  mutate(pixels_change = pixels_2019 - pixels_2001)
+
+MLRA_order_LC_SOC_2001_2019$taxsuborder <- factor(MLRA_order_LC_SOC_2001_2019$taxsuborder, levels = c("Aqualfs", "Udalfs", "Aquents", "Fluvents", "Orthents", "Psamments", "Saprists", "Aquepts", "Ochrepts", "Udepts", "Umbrepts", "Aquods", "Humods", "Orthods", "Aquults", "Udults", "Aquerts", "Uderts"))
+
+MLRA_order_LC_SOC_2001_2019$NLCD <- factor(MLRA_order_LC_SOC_2001_2019$NLCD, levels = c("Barren Land", "Deciduous Forest", "Evergreen Forest", "Mixed Forest", "Shrub/Scrub","Grassland/Herbaceous", "Pasture/Hay", "Cultivated Crops", "Woody Wetlands", "Emergent Herbaceous Wetlands"))
+
+
+Plot_5 = ggplot(MLRA_order_LC_SOC_2001_2019, aes(fill=NLCD, y=total_stock_change, x=taxsuborder)) + 
+    geom_bar(position="stack", stat="identity") +
+    labs(fill = NULL)+
+      scale_fill_manual(values=c("#B2ADA3", "#68AA63", "#1C6330", "#B5C98E", "#CCBA7C", "#E2E2C1", "#DBD83D", "#AA7028", "#BAD8EA", "#70A3BA")) +
+    theme_ipsum() +
+    xlab("")+
+  ylab("Change in Total SOC Stock (Tg)")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.1, hjust=0.5))
+
+Plot_5
+
+#Plot_6 = ggplot(MLRA_order_LC_SOC_2001_2019, aes(fill=NLCD, y=SOC_20_change, x=taxsuborder)) + 
+#    geom_bar(position="stack", stat="identity") +
+#    labs(fill = NULL)+
+#      scale_fill_manual(values=c("#B2ADA3", "#68AA63", "#1C6330", "#B5C98E", "#CCBA7C", "#E2E2C1", "#DBD83D", "#AA7028", "#BAD8EA", "#70A3BA")) +
+#    theme_ipsum() +
+#    xlab("")+
+#  ylab("Change in SOC20 (Mg/ha)")+
+#  theme(axis.text.x = element_text(angle = 90, vjust = 0.05, hjust=0.5))
+
+#Plot_6
+
+Plot_6 = ggplot(MLRA_order_LC_SOC_2001_2019, aes(taxsuborder, SOC_20_change))+
+  geom_jitter(aes(colour = NLCD), width = 0.2, size = 2)+
+        labs(fill = NULL)+
+          scale_color_manual(values=c("#B2ADA3", "#68AA63", "#1C6330", "#B5C98E", "#CCBA7C", "#E2E2C1", "#DBD83D", "#AA7028", "#BAD8EA", "#70A3BA")) +
+         theme_ipsum() +
+         xlab("")+
+  ylab("Change in SOC20 (Mg/ha)")+
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.1, hjust=0.5))
+Plot_6
+
+library(ggpubr)
+
+#ggarrange(Plot_1, Plot_2, Plot_3, Plot_4, Plot_5, Plot_6, ncol= 2, nrow = 3, common.legend = TRUE, legend = c("right") )
+
+Fig_7=ggarrange(Plot_1, Plot_2, Plot_3, Plot_4, Plot_5, Plot_6, ncol= 2, nrow = 3, common.legend = TRUE, labels = c("A", "B", "C", "D", "E", "F") )
+Fig_7
+ggsave("Fig_7_5.jpeg", width = 9, height = 11, dpi=2000)
+```
+```{r}
+library(magick)
+frink <- image_read("C:/Users/rs15235/OneDrive - University of Georgia/Manuscripts/DSP-Scale Model/R_project_exploring_uncertainity/DSP_Scale_Uncertainity/Fig_7_5.jpeg")
+frink2=image_annotate(frink, "The quick brown fox", font = 'Times', size = 30)
+image_browse(frink2)
+```
+
+Soil Taxa and Carbon Ranges For particular year
+```{r}
+
+AL_1_order_LC_SOC =AL_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+AL_2_order_LC_SOC =AL_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+GA_1_order_LC_SOC =GA_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+GA_2_order_LC_SOC =GA_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+MS_1_order_LC_SOC =MS_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+MS_2_order_LC_SOC =MS_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+FL_order_LC_SOC =FL_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+LA_order_LC_SOC =LA_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+NC_order_LC_SOC =NC_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+ 
+SC_order_LC_SOC =SC_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+TN_order_LC_SOC =TN_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+VA_order_LC_SOC =VA_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults","Aquults"))
+
+MLRA_order_LC_SOC_2001 <- rbind(VA_order_LC_SOC, TN_order_LC_SOC, NC_order_LC_SOC, SC_order_LC_SOC, LA_order_LC_SOC, FL_order_LC_SOC, MS_1_order_LC_SOC, MS_2_order_LC_SOC, GA_1_order_LC_SOC, GA_2_order_LC_SOC, AL_1_order_LC_SOC, AL_2_order_LC_SOC)
+
+MLRA_order_LC_SOC_2001$NLCD_2001 = as.factor(MLRA_order_LC_SOC_2001$NLCD_2001)
+
+library(tidyverse)
+library(ggplot2)
+ 
+#boxplot_data_2019 = MLRA_order_LC_SOC_2019%>%
+ #filter(taxsuborder %in% c("Ultisols"))%>%
+  #mutate(Year = "2019")
+#%>%
+  #filter(NLCD_2019 %in% c ("Cultivated Crops"))
+ 
+# grouped boxplot
+ggplot(MLRA_order_LC_SOC_2001, aes(x=NLCD_2001, y=SOC_pred_2001, fill=taxsuborder)) + geom_boxplot()
+```
+
+Soil Taxa and Carbon Ranges Year by Year Comaprison
+```{r}
+
+AL_1_order_LC_SOC =AL_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+AL_2_order_LC_SOC =AL_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+GA_1_order_LC_SOC =GA_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+GA_2_order_LC_SOC =GA_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+MS_1_order_LC_SOC =MS_Covar_1%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+MS_2_order_LC_SOC =MS_Covar_2%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+FL_order_LC_SOC =FL_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+LA_order_LC_SOC =LA_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+NC_order_LC_SOC =NC_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+ 
+SC_order_LC_SOC =SC_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+TN_order_LC_SOC =TN_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+VA_order_LC_SOC =VA_Covar%>%
+  select(taxsuborder, NLCD_2001, SOC_pred_2001)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+MLRA_order_LC_SOC_2001 <- rbind(VA_order_LC_SOC, TN_order_LC_SOC, NC_order_LC_SOC, SC_order_LC_SOC, LA_order_LC_SOC, FL_order_LC_SOC, MS_1_order_LC_SOC, MS_2_order_LC_SOC, GA_1_order_LC_SOC, GA_2_order_LC_SOC, AL_1_order_LC_SOC, AL_2_order_LC_SOC)
+
+MLRA_order_LC_SOC_2001$NLCD_2001 = as.factor(MLRA_order_LC_SOC_2001$NLCD_2001)
+
+MLRA_order_LC_SOC_2001$Year = "2001"
+
+colnames(MLRA_order_LC_SOC_2001) <- c("taxsuborder" ,  "NLCD"  ,   "SOC_pred" ,"Year"  )
+
+# Same for 2019
+AL_1_order_LC_SOC =AL_Covar_1%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+AL_2_order_LC_SOC =AL_Covar_2%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+GA_1_order_LC_SOC =GA_Covar_1%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+GA_2_order_LC_SOC =GA_Covar_2%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+MS_1_order_LC_SOC =MS_Covar_1%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+MS_2_order_LC_SOC =MS_Covar_2%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+FL_order_LC_SOC =FL_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+LA_order_LC_SOC =LA_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+NC_order_LC_SOC =NC_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+ 
+SC_order_LC_SOC =SC_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+TN_order_LC_SOC =TN_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+VA_order_LC_SOC =VA_Covar%>%
+  select(taxsuborder, NLCD_2019, SOC_pred_2019)%>%
+ filter(taxsuborder %in% c("Udults"))
+
+MLRA_order_LC_SOC_2019 <- rbind(VA_order_LC_SOC, TN_order_LC_SOC, NC_order_LC_SOC, SC_order_LC_SOC, LA_order_LC_SOC, FL_order_LC_SOC, MS_1_order_LC_SOC, MS_2_order_LC_SOC, GA_1_order_LC_SOC, GA_2_order_LC_SOC, AL_1_order_LC_SOC, AL_2_order_LC_SOC)
+
+MLRA_order_LC_SOC_2019$NLCD_2019 = as.factor(MLRA_order_LC_SOC_2019$NLCD_2019)
+
+MLRA_order_LC_SOC_2019$Year = "2019"
+colnames(MLRA_order_LC_SOC_2019) <- c("taxsuborder" ,  "NLCD"  ,   "SOC_pred" ,"Year"  )
+
+MLRA_order_LC_SOC_2001_2019 = rbind(MLRA_order_LC_SOC_2001, MLRA_order_LC_SOC_2019)
+
+library(tidyverse)
+library(ggplot2)
+ 
+#boxplot_data_2019 = MLRA_order_LC_SOC_2019%>%
+ #filter(taxsuborder %in% c("Ultisols"))%>%
+  #mutate(Year = "2019")
+#%>%
+  #filter(NLCD_2019 %in% c ("Cultivated Crops"))
+ 
+# grouped boxplot
+ggplot(MLRA_order_LC_SOC_2001_2019, aes(x=NLCD, y=SOC_pred, fill=Year)) + geom_boxplot()+ ggtitle("SOC Estimates for Udults")
+```

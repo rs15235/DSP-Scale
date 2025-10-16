@@ -1,0 +1,431 @@
+---
+title: "Fig_9_Table"
+author: "Rajneesh Sharma"
+date: "11/11/2023"
+output: html_document
+---
+
+```{r}
+
+library(tidyverse)
+
+AL_Covar_1 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/AL_1_SOC_pred.csv")
+AL_Covar_2 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/AL_2_SOC_pred.csv")
+GA_Covar_1 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/GA_1_SOC_pred.csv")
+GA_Covar_2 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/GA_2_SOC_pred.csv")
+MS_Covar_1 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MS_1_SOC_pred.csv")
+MS_Covar_2 = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MS_2_SOC_pred.csv")
+FL_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/FL_SOC_pred.csv")
+LA_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/LA_SOC_pred.csv")
+NC_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/NC_SOC_pred.csv")
+SC_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/SC_SOC_pred.csv")
+TN_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/TN_SOC_pred.csv")
+VA_Covar = read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/VA_SOC_pred.csv")
+
+```
+#Landcover Table for 2001
+```{r}
+# library
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+
+AL_1_LC_SOC =AL_Covar_1%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+AL_2_LC_SOC =AL_Covar_2%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+GA_1_LC_SOC =GA_Covar_1%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+GA_2_LC_SOC =GA_Covar_2%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MS_1_LC_SOC =MS_Covar_1%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MS_2_LC_SOC =MS_Covar_2%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+FL_LC_SOC =FL_Covar%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+LA_LC_SOC =LA_Covar%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+NC_LC_SOC =NC_Covar%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+ 
+SC_LC_SOC =SC_Covar%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+TN_LC_SOC =TN_Covar%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+VA_LC_SOC =VA_Covar%>%
+  select(NLCD_2001, SOC_pred_2001)%>%
+  group_by(NLCD_2001)%>%
+  summarise(total_stock_2001=sum(SOC_pred_2001)/1000000, SOC20_2001=mean(SOC_pred_2001), pixels_2001=n())
+
+MLRA_LC_SOC_2001 <- rbind(VA_LC_SOC, TN_LC_SOC, NC_LC_SOC, SC_LC_SOC, LA_LC_SOC, FL_LC_SOC, MS_1_LC_SOC, MS_2_LC_SOC, GA_1_LC_SOC, GA_2_LC_SOC, AL_1_LC_SOC, AL_2_LC_SOC)
+
+MLRA_LC_SOC_2001 =MLRA_LC_SOC_2001%>%
+  group_by(NLCD_2001)%>%
+  #filter(NLCD_2001 %in% c("21", "41", "42", "43", "52","81", "82", "90"))%>%
+  summarise(total_stock_2001=sum(total_stock_2001), SOC20_2001=mean(SOC20_2001), pixels_2001=sum(pixels_2001))
+
+write.csv(MLRA_LC_SOC_2001, "C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2001.csv")
+```
+
+#Landcover Table for 2006
+```{r}
+# library
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+
+AL_1_LC_SOC =AL_Covar_1%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+AL_2_LC_SOC =AL_Covar_2%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+GA_1_LC_SOC =GA_Covar_1%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+GA_2_LC_SOC =GA_Covar_2%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+MS_1_LC_SOC =MS_Covar_1%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+MS_2_LC_SOC =MS_Covar_2%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+FL_LC_SOC =FL_Covar%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+LA_LC_SOC =LA_Covar%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+NC_LC_SOC =NC_Covar%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+ 
+SC_LC_SOC =SC_Covar%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+TN_LC_SOC =TN_Covar%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+VA_LC_SOC =VA_Covar%>%
+  select(NLCD_2006, SOC_pred_2006)%>%
+  group_by(NLCD_2006)%>%
+  summarise(total_stock_2006=sum(SOC_pred_2006)/1000000, SOC20_2006=mean(SOC_pred_2006), pixels_2006=n())
+
+MLRA_LC_SOC_2006 <- rbind(VA_LC_SOC, TN_LC_SOC, NC_LC_SOC, SC_LC_SOC, LA_LC_SOC, FL_LC_SOC, MS_1_LC_SOC, MS_2_LC_SOC, GA_1_LC_SOC, GA_2_LC_SOC, AL_1_LC_SOC, AL_2_LC_SOC)
+
+MLRA_LC_SOC_2006 =MLRA_LC_SOC_2006%>%
+  group_by(NLCD_2006)%>%
+  #filter(NLCD_2006 %in% c("21", "41", "42", "43", "52","81", "82", "90"))%>%
+  summarise(total_stock_2006=sum(total_stock_2006), SOC20_2006=mean(SOC20_2006), pixels_2006=sum(pixels_2006))
+
+write.csv(MLRA_LC_SOC_2006, "C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2006.csv")
+
+n_pixels=sum(MLRA_LC_SOC_2006$pixels_2006)
+```
+
+
+#Landcover Table for 2011
+```{r}
+# library
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+
+AL_1_LC_SOC =AL_Covar_1%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+AL_2_LC_SOC =AL_Covar_2%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+GA_1_LC_SOC =GA_Covar_1%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+GA_2_LC_SOC =GA_Covar_2%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+MS_1_LC_SOC =MS_Covar_1%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+MS_2_LC_SOC =MS_Covar_2%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+FL_LC_SOC =FL_Covar%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+LA_LC_SOC =LA_Covar%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+NC_LC_SOC =NC_Covar%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+ 
+SC_LC_SOC =SC_Covar%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+TN_LC_SOC =TN_Covar%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+VA_LC_SOC =VA_Covar%>%
+  select(NLCD_2011, SOC_pred_2011)%>%
+  group_by(NLCD_2011)%>%
+  summarise(total_stock_2011=sum(SOC_pred_2011)/1000000, SOC20_2011=mean(SOC_pred_2011), pixels_2011=n())
+
+MLRA_LC_SOC_2011 <- rbind(VA_LC_SOC, TN_LC_SOC, NC_LC_SOC, SC_LC_SOC, LA_LC_SOC, FL_LC_SOC, MS_1_LC_SOC, MS_2_LC_SOC, GA_1_LC_SOC, GA_2_LC_SOC, AL_1_LC_SOC, AL_2_LC_SOC)
+
+MLRA_LC_SOC_2011 =MLRA_LC_SOC_2011%>%
+  group_by(NLCD_2011)%>%
+  #filter(NLCD_2011 %in% c("21", "41", "42", "43", "52","81", "82", "90"))%>%
+  summarise(total_stock_2011=sum(total_stock_2011), SOC20_2011=mean(SOC20_2011), pixels_2011=sum(pixels_2011))
+
+write.csv(MLRA_LC_SOC_2011, "C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2011.csv")
+
+sum(MLRA_LC_SOC_2011$pixels_2011)
+```
+
+
+#Landcover Table for 2016
+```{r}
+# library
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+
+AL_1_LC_SOC =AL_Covar_1%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+AL_2_LC_SOC =AL_Covar_2%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+GA_1_LC_SOC =GA_Covar_1%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+GA_2_LC_SOC =GA_Covar_2%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+MS_1_LC_SOC =MS_Covar_1%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+MS_2_LC_SOC =MS_Covar_2%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+FL_LC_SOC =FL_Covar%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+LA_LC_SOC =LA_Covar%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+NC_LC_SOC =NC_Covar%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+ 
+SC_LC_SOC =SC_Covar%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+TN_LC_SOC =TN_Covar%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+VA_LC_SOC =VA_Covar%>%
+  select(NLCD_2016, SOC_pred_2016)%>%
+  group_by(NLCD_2016)%>%
+  summarise(total_stock_2016=sum(SOC_pred_2016)/1000000, SOC20_2016=mean(SOC_pred_2016), pixels_2016=n())
+
+MLRA_LC_SOC_2016 <- rbind(VA_LC_SOC, TN_LC_SOC, NC_LC_SOC, SC_LC_SOC, LA_LC_SOC, FL_LC_SOC, MS_1_LC_SOC, MS_2_LC_SOC, GA_1_LC_SOC, GA_2_LC_SOC, AL_1_LC_SOC, AL_2_LC_SOC)
+
+MLRA_LC_SOC_2016 =MLRA_LC_SOC_2016%>%
+  group_by(NLCD_2016)%>%
+  #filter(NLCD_2016 %in% c("21", "41", "42", "43", "52","81", "82", "90"))%>%
+  summarise(total_stock_2016=sum(total_stock_2016), SOC20_2016=mean(SOC20_2016), pixels_2016=sum(pixels_2016))
+
+write.csv(MLRA_LC_SOC_2016, "C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2016.csv")
+
+sum(MLRA_LC_SOC_2016$pixels_2016)
+```
+
+#Landcover Table for 2019
+```{r}
+# library
+library(ggplot2)
+library(viridis)
+library(hrbrthemes)
+
+AL_1_LC_SOC =AL_Covar_1%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+AL_2_LC_SOC =AL_Covar_2%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+GA_1_LC_SOC =GA_Covar_1%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+GA_2_LC_SOC =GA_Covar_2%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+MS_1_LC_SOC =MS_Covar_1%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+MS_2_LC_SOC =MS_Covar_2%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+FL_LC_SOC =FL_Covar%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+LA_LC_SOC =LA_Covar%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+NC_LC_SOC =NC_Covar%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+ 
+SC_LC_SOC =SC_Covar%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+TN_LC_SOC =TN_Covar%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+VA_LC_SOC =VA_Covar%>%
+  select(NLCD_2019, SOC_pred_2019)%>%
+  group_by(NLCD_2019)%>%
+  summarise(total_stock_2019=sum(SOC_pred_2019)/1000000, SOC20_2019=mean(SOC_pred_2019), pixels_2019=n())
+
+MLRA_LC_SOC_2019 <- rbind(VA_LC_SOC, TN_LC_SOC, NC_LC_SOC, SC_LC_SOC, LA_LC_SOC, FL_LC_SOC, MS_1_LC_SOC, MS_2_LC_SOC, GA_1_LC_SOC, GA_2_LC_SOC, AL_1_LC_SOC, AL_2_LC_SOC)
+
+MLRA_LC_SOC_2019 =MLRA_LC_SOC_2019%>%
+  group_by(NLCD_2019)%>%
+  #filter(NLCD_2019 %in% c("21", "41", "42", "43", "52","81", "82", "90"))%>%
+  summarise(total_stock_2019=sum(total_stock_2019), SOC20_2019=mean(SOC20_2019), pixels_2019=sum(pixels_2019))
+
+write.csv(MLRA_LC_SOC_2019, "C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2019.csv")
+
+sum(MLRA_LC_SOC_2019$pixels_2019)
+```
+
+```{r}
+MLRA_LC_SOC_2019=read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2019.csv")
+MLRA_LC_SOC_2016=read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2016.csv")
+MLRA_LC_SOC_2011=read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2011.csv")
+MLRA_LC_SOC_2006=read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2006.csv")
+MLRA_LC_SOC_2001=read_csv("C:/Users/rs15235/OneDrive - University of Georgia/Documents/ArcGIS/Projects/DSP_Scale/Predictions/MLRA_LC_SOC_2001.csv")
+
+MLRA_LC_SOC=cbind(MLRA_LC_SOC_2001,MLRA_LC_SOC_2006,MLRA_LC_SOC_2011,MLRA_LC_SOC_2016,MLRA_LC_SOC_2019)
+
+write_csv(MLRA_LC_SOC,"E:/Manuscripts/DSP-Scale Model/MLRA_LC_SOC.csv")
+````
